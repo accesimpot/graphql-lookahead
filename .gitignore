@@ -86,7 +86,6 @@ web_modules/
 # build output
 .nuxt
 dist
-lib
 
 # Gatsby files
 .cache/

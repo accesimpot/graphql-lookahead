@@ -6,8 +6,20 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": "20.14.0",
-    "pnpm": "9.x"
+    "node": "20.16.0"
+  },
+  "scripts": {
+    "build": "pnpm -F=main build",
+    "lint": "pnpm run lint:all",
+    "lint:fix": "pnpm run lint:all:fix",
+    "lint:all": "pnpm run lint:base .",
+    "lint:all:fix": "pnpm run lint:all --fix",
+    "lint:affected": "pnpm run lint:base $(git diff --name-only --diff-filter=d origin/main | grep -E \"\\.[mc]?[jt]s$\" | xargs)",
+    "lint:affected:fix": "pnpm run lint:affected --fix",
+    "lint:base": "eslint --cache",
+    "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
+    "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
+    "test": "pnpm run -r test"
   },
   "exports": {
     ".": {
@@ -21,6 +33,12 @@
     "lib"
   ],
   "devDependencies": {
-    "nx": "^15.8.7"
+    "@types/eslint__js": "^8.42.3",
+    "@eslint/js": "^9.8.0",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.0.1"
   }
 }

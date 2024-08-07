@@ -1,28 +1,24 @@
 {
   "private": true,
   "name": "main",
-  "main": "lib/index.js",
+  "main": "lib/index.mjs",
+  "type": "module",
   "scripts": {
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "test": "pnpm run test:unit",
     "test:unit": "vitest --run"
   },
   "dependencies": {
-    "@rollup/plugin-graphql": "^2.0.4",
-    "glob": "^11.0.0",
-    "graphql": "^16.9.0",
-    "graphql-yoga": "^5.6.3",
-    "node-fetch": "^3.3.2",
-    "utils": "workspace:*",
-    "vite": "^5.3.5",
-    "vite-plugin-dts": "^4.0.1"
+    "graphql": "^16.9.0"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
     "@types/node": "^20.14.8",
     "@vitest/coverage-istanbul": "^2.0.5",
+    "dev-utils": "workspace:*",
     "lodash.clonedeep": "^4.5.0",
     "typescript": "^5.5.4",
+    "vite": "^5.3.5",
     "vitest": "^2.0.5"
   }
 }

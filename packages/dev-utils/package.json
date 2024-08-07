@@ -1,21 +1,20 @@
 {
   "private": true,
-  "name": "test-integration",
+  "name": "dev-utils",
+  "main": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=${NODE_ENV:-development} vite build",
-    "start": "node dist/graphql-yoga/index.js",
-    "test": "vitest --run"
+    "build": "tsc --project tsconfig.compiler.json"
   },
   "devDependencies": {
+    "@rollup/plugin-graphql": "^2.0.4",
     "@types/node": "^20.14.8",
-    "dev-utils": "workspace:*",
     "glob": "^11.0.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.6.3",
     "node-fetch": "^3.3.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
-    "vitest": "^2.0.5"
+    "vite-plugin-dts": "^4.0.1"
   }
 }
