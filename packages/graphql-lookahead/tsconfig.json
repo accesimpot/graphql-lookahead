@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "lib",
+
+    /* building for a library: */
+    "declaration": true,
+    "declarationMap": true
+  },
+
+  "include": ["*", "src/**/*"]
+}

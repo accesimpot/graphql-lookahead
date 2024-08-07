@@ -1,0 +1,26 @@
+{
+  "name": "graphql-lookahead",
+  "version": "1.0.0",
+  "description": "GraphQL Lookahead in Typescript to check if some fields are present in the operation",
+  "repository": "pmrotule/graphql-lookahead",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "20.14.0",
+    "pnpm": "9.x"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
+    }
+  },
+  "main": "./lib/index.cjs",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "devDependencies": {
+    "nx": "^15.8.7"
+  }
+}
