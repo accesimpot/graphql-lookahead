@@ -22,21 +22,16 @@
     "test": "pnpm run -r test"
   },
   "exports": {
-    ".": {
-      "import": "./lib/index.mjs",
-      "require": "./lib/index.cjs"
-    }
+    ".": "./dist/index.mjs"
   },
-  "main": "./lib/index.cjs",
-  "types": "./lib/index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
-    "lib"
+    "dist"
   ],
   "devDependencies": {
     "@types/eslint__js": "^8.42.3",
     "@eslint/js": "^9.8.0",
     "eslint": "^9.8.0",
-    "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.1"

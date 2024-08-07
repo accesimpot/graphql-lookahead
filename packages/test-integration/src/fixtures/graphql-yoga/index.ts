@@ -1,14 +1,13 @@
 import { createServer } from 'node:http'
 import { createSchema, createYoga } from 'graphql-yoga'
-import typeDefs from './typeDefs.gql'
 import { resolvers } from './resolvers'
-
-const PORT = 4000
+import { typeDefs } from './typeDefs'
+import { GRAPHQL_YOGA_PORT } from '../../constants'
 
 const schema = createSchema({ typeDefs, resolvers })
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
-server.listen(PORT, () => {
-  console.info(`🚀 Server is running on http://localhost:${PORT}/graphql`)
+server.listen(GRAPHQL_YOGA_PORT, () => {
+  console.info(`🚀 Server is running on http://localhost:${GRAPHQL_YOGA_PORT}/graphql`)
 })

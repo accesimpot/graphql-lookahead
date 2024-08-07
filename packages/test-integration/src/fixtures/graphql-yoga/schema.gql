@@ -1,0 +1,33 @@
+type Query {
+  order: Order
+}
+
+type Order {
+  status: String!
+  items: [OrderItem!]!
+  tax: Int!
+  subtotal: Int!
+  total: Int!
+}
+
+type Inventory {
+  stock: Int!
+}
+
+type Product {
+  color: String
+  size: String
+  inventory: Inventory!
+}
+
+type ProductGroup {
+  name: String!
+  categories: [String!]!
+}
+
+type OrderItem {
+  product: Product
+  productGroup: ProductGroup
+  price: Int!
+  quantity: Int!
+}

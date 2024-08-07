@@ -4,10 +4,15 @@
   "type": "module",
   "scripts": {
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
-    "start": "node dist/graphql-yoga/index.js",
+    "start": "pnpm run start:graphql-yoga",
+    "start:graphql-yoga": "node dist/fixtures/graphql-yoga/index.js",
     "test": "vitest --run"
   },
+  "imports": {
+    "#fixtures/*": "./src/fixtures/*"
+  },
   "devDependencies": {
+    "@graphql-tools/executor-http": "^1.1.5",
     "@types/node": "^20.14.8",
     "dev-utils": "workspace:*",
     "glob": "^11.0.0",

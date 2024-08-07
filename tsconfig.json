@@ -13,8 +13,10 @@
 
     /* Strictness */
     "strict": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+
+    /* @see https://stackoverflow.com/questions/71035269/type-narrowing-checking-variable-object-key-existence-when-nouncheckedindexedac */
+    // "noUncheckedIndexedAccess": true,
 
     /* Transpiling with Esbuild: */
     "module": "preserve",

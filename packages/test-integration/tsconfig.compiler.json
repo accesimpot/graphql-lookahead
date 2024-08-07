@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
 
   "compilerOptions": {
-    "rootDir": "fixtures"
+    "rootDir": "src"
   },
   "exclude": ["node_modules", "dist", "./*.config.ts", "**/*.spec.ts", "vitest*", "__mocks__"]
 }

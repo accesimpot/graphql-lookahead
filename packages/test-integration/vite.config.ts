@@ -1,3 +1,3 @@
 import { generateViteConfig } from 'dev-utils'
 
-export default generateViteConfig({ absoluteRootDir: __dirname, srcDir: 'fixtures' })
+export default generateViteConfig({ absoluteRootDir: __dirname })

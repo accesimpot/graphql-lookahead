@@ -1,0 +1,23 @@
+query cart {
+  order {
+    status
+    items {
+      product {
+        color
+        size
+        inventory {
+          stock
+        }
+      }
+      productGroup {
+        name
+        categories
+      }
+      price
+      quantity
+    }
+    tax
+    subtotal
+    total
+  }
+}
