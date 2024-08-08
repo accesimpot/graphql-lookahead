@@ -18,12 +18,6 @@ export function generateViteConfig(options: {
   const absoluteSrcDir = path.resolve(absoluteRootDir, srcDir)
   const absoluteDistDir = path.resolve(absoluteRootDir, distDir)
 
-  const entries = globSync('**/*.ts', { cwd: absoluteSrcDir }).filter(
-    // Exclude .d.ts and .spec.ts files
-    filePath => !/\.(d|spec)\.ts$/.test(filePath)
-  )
-  const input = getPreservedInputMapping(entries, absoluteSrcDir)
-
   const tsconfigPath = path.resolve(absoluteRootDir, 'tsconfig.compiler.json')
 
   return defineConfig({
@@ -52,7 +46,7 @@ export function generateViteConfig(options: {
     build: {
       outDir: absoluteDistDir,
       lib: {
-        entry: input,
+        entry: getPreservedInputMapping(absoluteSrcDir),
         formats: ['es'],
       },
       sourcemap: true,
@@ -75,12 +69,15 @@ export function generateViteConfig(options: {
  * dist directory.
  * @see https://rollupjs.org/configuration-options/#input
  *
- * @param preservedInputs - file paths relative to src directory
  * @param absoluteSrcDir - absolute path to src directory
  */
-function getPreservedInputMapping(preservedInputs: string[], absoluteSrcDir: string) {
+function getPreservedInputMapping(absoluteSrcDir: string) {
+  const entries = globSync('**/*.ts', { cwd: absoluteSrcDir }).filter(
+    // Exclude .d.ts and .spec.ts files
+    filePath => !/\.(d|spec)\.ts$/.test(filePath)
+  )
   return Object.fromEntries(
-    preservedInputs.map(filePath => [
+    entries.map(filePath => [
       filePath.replace(/\.[mc]?[jt]s$/, ''),
       path.join(absoluteSrcDir, filePath),
     ])

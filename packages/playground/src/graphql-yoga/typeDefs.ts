@@ -4,6 +4,4 @@ import { parse } from 'graphql'
 
 const require = createRequire(import.meta.url)
 
-export const typeDefs = parse(
-  fs.readFileSync(require.resolve('#fixtures/graphql-yoga/schema.gql'), 'utf8')
-)
+export const typeDefs = parse(fs.readFileSync(require.resolve('#src/schema.gql'), 'utf8'))

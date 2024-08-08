@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "test-integration",
+  "name": "playground",
   "type": "module",
   "scripts": {
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
@@ -9,7 +9,7 @@
     "test": "vitest --run"
   },
   "imports": {
-    "#fixtures/*": "./src/fixtures/*"
+    "#src/*": "./src/*"
   },
   "devDependencies": {
     "@graphql-tools/executor-http": "^1.1.5",
