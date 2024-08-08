@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm run build --watch --emptyOutDir=false",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
+    "types:check": "tsc --project tsconfig.lint.json",
     "test": "pnpm run test:unit",
     "test:unit": "vitest --run"
   },

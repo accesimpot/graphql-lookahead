@@ -20,6 +20,7 @@
     "lint:base": "eslint --cache",
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
+    "types:check": "pnpm run -F=main types:check",
     "test": "pnpm run -r test"
   },
   "exports": {
