@@ -7,7 +7,6 @@
     "build": "tsc --project tsconfig.compiler.json"
   },
   "devDependencies": {
-    "@rollup/plugin-graphql": "^2.0.4",
     "@types/node": "^20.14.8",
     "glob": "^11.0.0",
     "graphql": "^16.9.0",

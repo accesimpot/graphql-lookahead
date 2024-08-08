@@ -1,3 +1,3 @@
 import { generateViteConfig } from 'dev-utils'
 
-export default generateViteConfig({ absoluteRootDir: __dirname })
+export default generateViteConfig({ absoluteRootDir: __dirname, pluginCategories: ['dts'] })
