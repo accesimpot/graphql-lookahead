@@ -1,9 +1,10 @@
 {
   "private": true,
   "name": "main",
-  "main": "lib/index.mjs",
+  "main": "./dist/index.js",
   "type": "module",
   "scripts": {
+    "dev": "pnpm run build --watch --emptyOutDir=false",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "test": "pnpm run test:unit",
     "test:unit": "vitest --run"

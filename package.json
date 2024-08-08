@@ -9,6 +9,7 @@
     "node": "20.16.0"
   },
   "scripts": {
+    "dev": "pnpm run -r dev",
     "build": "pnpm -F=main build",
     "lint": "pnpm run lint:all",
     "lint:fix": "pnpm run lint:all:fix",
@@ -22,11 +23,11 @@
     "test": "pnpm run -r test"
   },
   "exports": {
-    ".": "./dist/index.mjs"
+    ".": "./packages/graphql-lookahead/dist/index.js"
   },
-  "types": "./dist/index.d.ts",
+  "types": "./packages/graphql-lookahead/dist/index.d.ts",
   "files": [
-    "dist"
+    "packages/graphql-lookahead/dist"
   ],
   "devDependencies": {
     "@types/eslint__js": "^8.42.3",
