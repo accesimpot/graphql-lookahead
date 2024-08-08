@@ -6,19 +6,15 @@
   "scripts": {
     "dev": "pnpm run build --watch --emptyOutDir=false",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
-    "types:check": "tsc --project tsconfig.lint.json",
-    "test": "pnpm run test:unit",
-    "test:unit": "vitest --run"
+    "types:check": "tsc --project tsconfig.lint.json"
   },
   "dependencies": {
     "graphql": "^16.9.0"
   },
   "devDependencies": {
-    "@types/lodash.clonedeep": "^4.5.9",
     "@types/node": "^20.14.8",
     "@vitest/coverage-istanbul": "^2.0.5",
     "dev-utils": "workspace:*",
-    "lodash.clonedeep": "^4.5.0",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
     "vitest": "^2.0.5"
