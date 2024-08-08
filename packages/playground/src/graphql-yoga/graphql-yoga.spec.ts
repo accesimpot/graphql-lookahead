@@ -15,12 +15,12 @@ describe('graphql-yoga', () => {
     return (await executor(opts)) as GraphqlResponse
   }
 
-  describe('when it sends cart query', async () => {
+  describe('when it sends full cart query', async () => {
     const result = await execute({
-      document: getFixtureQuery('graphql-yoga/queries/cart.gql'),
+      document: getFixtureQuery('graphql-yoga/queries/full-cart.gql'),
     })
 
-    it('returns order total', () => {
+    it('returns full cart data', () => {
       expect(result.data).toEqual({ order: mockFullCart })
     })
   })
