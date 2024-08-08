@@ -9,7 +9,7 @@
     "node": "20.16.0"
   },
   "scripts": {
-    "dev": "pnpm run -r dev",
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm run -F=main dev\" \"pnpm run -F=playground dev\"",
     "build": "pnpm -F=main build",
     "lint": "pnpm run lint:all",
     "lint:fix": "pnpm run lint:all:fix",
@@ -32,6 +32,7 @@
   "devDependencies": {
     "@types/eslint__js": "^8.42.3",
     "@eslint/js": "^9.8.0",
+    "concurrently": "^8.2.2",
     "eslint": "^9.8.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",

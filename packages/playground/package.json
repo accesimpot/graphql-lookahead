@@ -3,7 +3,7 @@
   "name": "playground",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development concurrently --kill-others \"pnpm run build --watch\" \"nodemon --delay 100ms --inspect ./dist/graphql-yoga -e js\"",
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm run build --watch\" \"nodemon --delay 100ms --inspect ./dist/graphql-yoga -e js\"",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "start": "pnpm run start:graphql-yoga",
     "start:graphql-yoga": "node dist/graphql-yoga",

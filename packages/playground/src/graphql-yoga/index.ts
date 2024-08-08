@@ -9,5 +9,5 @@ const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
 server.listen(GRAPHQL_YOGA_PORT, () => {
-  console.info(`🚀 Server is running on http://localhost:${GRAPHQL_YOGA_PORT}/graphql`)
+  console.info(`\n🚀 Server is running on http://localhost:${GRAPHQL_YOGA_PORT}/graphql\n`)
 })
