@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: pnpm install
 
+      - name: Build all packages 📦
+        run: pnpm run -r build
+
       - name: Run linter 👀
         run: pnpm run lint
 
