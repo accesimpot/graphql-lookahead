@@ -11,7 +11,7 @@ interface QueryFilter {
 
 export const resolvers: Resolver = {
   Query: {
-    order: (_parent, _args, _context, info) => {
+    order: (_parent, _args, context, info) => {
       const queryFilters: QueryFilter = {}
 
       lookahead({
@@ -28,21 +28,8 @@ export const resolvers: Resolver = {
         },
       })
 
-      console.dir({ queryFilters }, { depth: null })
-
-      // => {
-      //   queryFilters: {
-      //     include: [
-      //       {
-      //         model: 'OrderItem',
-      //         include: [
-      //           { model: 'Product', include: [ { model: 'Inventory' } ] },
-      //           { model: 'ProductGroup' }
-      //         ]
-      //       }
-      //     ]
-      //   }
-      // }
+      // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
+      context.request.metaData = { ...context.request.metaData, queryFilters }
 
       return mockFullCart
     },
