@@ -1,0 +1,16 @@
+query cart {
+  order {
+    status
+    items {
+      productGroup {
+        name
+        categories
+      }
+      price
+      quantity
+    }
+    tax
+    subtotal
+    total
+  }
+}

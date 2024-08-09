@@ -9,6 +9,7 @@
     "node": "20.16.0"
   },
   "scripts": {
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm run -F=main dev\" \"pnpm run -F=playground dev\"",
     "build": "pnpm -F=main build",
     "lint": "pnpm run lint:all",
     "lint:fix": "pnpm run lint:all:fix",
@@ -19,18 +20,20 @@
     "lint:base": "eslint --cache",
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
+    "types:check": "pnpm run -F=main types:check",
     "test": "pnpm run -r test"
   },
   "exports": {
-    ".": "./dist/index.mjs"
+    ".": "./packages/graphql-lookahead/dist/index.js"
   },
-  "types": "./dist/index.d.ts",
+  "types": "./packages/graphql-lookahead/dist/index.d.ts",
   "files": [
-    "dist"
+    "packages/graphql-lookahead/dist"
   ],
   "devDependencies": {
     "@types/eslint__js": "^8.42.3",
     "@eslint/js": "^9.8.0",
+    "concurrently": "^8.2.2",
     "eslint": "^9.8.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
