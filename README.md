@@ -39,17 +39,16 @@ That's it! You can now use lookaheads in your GraphQL server ✨
   pnpm install
 
   # Develop
-  pnpm run dev
+  pnpm dev
 
   # Run ESLint
-  pnpm run lint
+  pnpm lint
 
   # Run Vitest
-  pnpm run test
-  pnpm run test:watch
+  pnpm test
 
   # Release new version
-  pnpm run release
+  pnpm release
   ```
 </details>
 

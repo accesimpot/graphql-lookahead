@@ -4,7 +4,7 @@
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run build --watch --emptyOutDir=false",
+    "dev": "pnpm build --watch --emptyOutDir=false",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "types:check": "tsc --project tsconfig.lint.json"
   },
