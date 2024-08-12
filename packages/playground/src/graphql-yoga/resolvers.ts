@@ -65,8 +65,8 @@ export const resolvers: Resolver = {
       context.request.metaData = { ...context.request.metaData, productData: { queryFilters } }
 
       return [
-        { ...mockFullCart.items[0].product, id: 34 },
-        { ...mockFullCart.items[0].product, id: 36 },
+        { ...mockFullCart.items[0].product, id: '34' },
+        { ...mockFullCart.items[0].product, id: '36' },
       ]
     },
   },

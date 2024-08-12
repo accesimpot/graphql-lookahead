@@ -3,7 +3,7 @@ export const mockFullCart = {
   items: [
     {
       product: {
-        id: 123,
+        id: '123',
         color: 'blue',
         size: 'M',
         inventory: {

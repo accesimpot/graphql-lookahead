@@ -3,6 +3,7 @@ query fullCart {
     status
     items {
       product {
+        id
         color
         size
         inventory {
