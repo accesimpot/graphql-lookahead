@@ -29,7 +29,7 @@ export const resolvers: Resolver = {
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
-      context.request.metaData = { ...context.request.metaData, order: { queryFilters } }
+      context.request.metaData = { ...context.request.metaData, 'Query.order': { queryFilters } }
 
       return mockFullCart
     },
@@ -62,7 +62,10 @@ export const resolvers: Resolver = {
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
-      context.request.metaData = { ...context.request.metaData, productData: { queryFilters } }
+      context.request.metaData = {
+        ...context.request.metaData,
+        'ProductPageContent.products': { queryFilters },
+      }
 
       return [
         { ...mockFullCart.items[0].product, id: '34' },

@@ -27,7 +27,7 @@ describe('graphql-yoga', () => {
     })
 
     it('has fully nested query filters in meta data', () => {
-      expect(result.extensions?.meta?.order.queryFilters).toEqual({
+      expect(result.extensions?.meta?.['Query.order'].queryFilters).toEqual({
         include: [
           {
             model: 'OrderItem',
@@ -51,7 +51,7 @@ describe('graphql-yoga', () => {
     })
 
     it('has partial query filters in meta data', () => {
-      expect(result.extensions?.meta?.order.queryFilters).toEqual({
+      expect(result.extensions?.meta?.['Query.order'].queryFilters).toEqual({
         include: [
           {
             model: 'OrderItem',
