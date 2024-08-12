@@ -18,20 +18,47 @@ export const resolvers: Resolver = {
         info,
         state: queryFilters,
 
-        next({ parentState, typeName }) {
+        next({ state, typeName }) {
           const nextState: QueryFilter = { model: typeName }
 
-          parentState.include = parentState.include || []
-          parentState.include.push(nextState)
+          state.include = state.include || []
+          state.include.push(nextState)
 
           return nextState
         },
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
-      context.request.metaData = { ...context.request.metaData, queryFilters }
+      context.request.metaData = { ...context.request.metaData, order: { queryFilters } }
 
       return mockFullCart
+    },
+
+    page: () => ({}),
+  },
+
+  Page: {
+    productData: (_parent, _args, context, info) => {
+      const queryFilters: QueryFilter = {}
+
+      lookahead({
+        info,
+        state: queryFilters,
+
+        next({ state, typeName }) {
+          const nextState: QueryFilter = { model: typeName }
+
+          state.include = state.include || []
+          state.include.push(nextState)
+
+          return nextState
+        },
+      })
+
+      // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
+      context.request.metaData = { ...context.request.metaData, productData: { queryFilters } }
+
+      return mockFullCart.items[0].product
     },
   },
 }

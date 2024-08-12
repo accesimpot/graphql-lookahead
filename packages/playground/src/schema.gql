@@ -1,5 +1,6 @@
 type Query {
   order: Order
+  page: Page
 }
 
 type Order {
@@ -30,4 +31,8 @@ type OrderItem {
   productGroup: ProductGroup
   price: Int!
   quantity: Int!
+}
+
+type Page {
+  productData: Product
 }

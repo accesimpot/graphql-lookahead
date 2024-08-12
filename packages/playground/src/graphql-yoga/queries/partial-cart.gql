@@ -1,4 +1,4 @@
-query cart {
+query partialCart {
   order {
     status
     items {
