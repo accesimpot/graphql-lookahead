@@ -34,11 +34,17 @@ export const resolvers: Resolver = {
       return mockFullCart
     },
 
-    page: () => ({}),
+    page: () => ({
+      content: {
+        get __typename() {
+          return 'ProductPageContent'
+        },
+      },
+    }),
   },
 
-  Page: {
-    productData: (_parent, _args, context, info) => {
+  ProductPageContent: {
+    products: (_parent, _args, context, info) => {
       const queryFilters: QueryFilter = {}
 
       lookahead({
@@ -58,7 +64,10 @@ export const resolvers: Resolver = {
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = { ...context.request.metaData, productData: { queryFilters } }
 
-      return mockFullCart.items[0].product
+      return [
+        { ...mockFullCart.items[0].product, id: 34 },
+        { ...mockFullCart.items[0].product, id: 36 },
+      ]
     },
   },
 }

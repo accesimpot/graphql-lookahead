@@ -1,5 +1,10 @@
 import type { GraphQLResolveInfo, SelectionSetNode } from 'graphql'
-import { findTypeName, findTypeDefinition } from './generic'
+import {
+  findTypeName,
+  findTypeDefinitionByName,
+  findSelectionName,
+  findSelectionSetForInfoPath,
+} from './generic'
 
 type HandlerDetails<TState> = {
   fieldName: string
@@ -8,58 +13,44 @@ type HandlerDetails<TState> = {
   typeName: string
   schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
-  until?: (details: HandlerDetails<TState>) => boolean | undefined
 }
 type Handler<TState> = (details: HandlerDetails<TState>) => TState
 
-const QUERY_TYPE = 'Query'
-
 export function lookahead<TState>(options: {
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'parentType' | 'returnType' | 'fieldName'>
+  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'returnType' | 'path'>
   next: Handler<TState>
   state?: TState
 }): void {
   const { info } = options
   const state = options.state as TState
 
-  lookUntil({
-    state,
-    typeName: QUERY_TYPE,
-    schema: info.schema,
-    selectionSet: info.operation.selectionSet,
+  const returnTypeName = findTypeName(info.returnType)
+  if (!returnTypeName) return
 
-    until: details => {
-      if ('name' in info.returnType && details.typeName === info.returnType.name) {
-        lookUntil({
-          next: options.next,
-          state,
-          typeName: details.typeName,
-          schema: details.schema,
-          selectionSet: details.selectionSet,
-        })
-        return true
-      }
-      return false
-    },
-  })
+  const selectionSet = findSelectionSetForInfoPath(info)
+
+  if (selectionSet) {
+    lookDeeper({
+      next: options.next,
+      state,
+      typeName: returnTypeName,
+      schema: info.schema,
+      selectionSet,
+    })
+  }
 }
 
-export function lookUntil<TState>(options: {
+function lookDeeper<TState>(options: {
   next?: Handler<TState>
   state: TState
   typeName: string
   schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
-  until?: (details: HandlerDetails<TState>) => boolean | undefined
-}): boolean | undefined {
+}): void {
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
-  const until: NonNullable<typeof options.until> = options.until || (() => false)
 
   // Get the definition of the parent type in order to get all its possible fields (getFields)
-  const possibleTypeDefinition = options.schema.getType(options.typeName)
-  const typeDefinition = possibleTypeDefinition
-    ? findTypeDefinition(possibleTypeDefinition)
-    : undefined
+  const typeDefinition = findTypeDefinitionByName(options.schema, options.typeName)
 
   // This should never happen
   if (!typeDefinition) return
@@ -68,19 +59,8 @@ export function lookUntil<TState>(options: {
 
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
-    const selectionNameObj =
-      // When the selection has a type condition, it means it's an inline fragment
-      'typeCondition' in selection
-        ? selection.typeCondition
-        : // Otherwise, it is simply a field of the parent selection
-          'name' in selection
-          ? selection
-          : undefined
-
-    // This should never happen
-    if (!selectionNameObj || !('name' in selectionNameObj)) continue
-
-    const selectionName = selectionNameObj.name.value
+    const selectionName = findSelectionName(selection)
+    if (!selectionName) continue
 
     let selectionTypeName: string | undefined
 
@@ -100,23 +80,16 @@ export function lookUntil<TState>(options: {
         typeName: selectionTypeName,
         schema: options.schema,
         selectionSet: selection.selectionSet,
-        until,
       }
       const handlerArgs: HandlerDetails<TState> = {
         ...lookUntilArgs,
         fieldName: selectionName,
       }
 
-      // Break the loop if "until" handler returns true
-      if (until(handlerArgs)) return true
-
       lookUntilArgs.state = next(handlerArgs)
 
       // The function looks deeper in the operation by calling itself
-      const returnValue = lookUntil(lookUntilArgs)
-
-      // Break the loop if "until" handler returns true deeper down the chain
-      if (returnValue === true) return returnValue
+      lookDeeper(lookUntilArgs)
     }
   }
 }

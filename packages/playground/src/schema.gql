@@ -16,6 +16,7 @@ type Inventory {
 }
 
 type Product {
+  id: ID!
   color: String
   size: String
   inventory: Inventory!
@@ -34,5 +35,16 @@ type OrderItem {
 }
 
 type Page {
-  productData: Product
+  content: PageContent
+}
+
+union PageContent = HomepageContent | ProductPageContent
+
+type HomepageContent {
+  title: String
+}
+
+type ProductPageContent {
+  title: String
+  products: [Product!]
 }
