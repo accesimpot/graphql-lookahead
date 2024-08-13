@@ -37,19 +37,20 @@ export function findSelectionName(selection: SelectionNode) {
         ? selection
         : undefined
 
-  // This should never happen
   if (!selectionNameObj || !('name' in selectionNameObj)) return
 
   return selectionNameObj.name.value
 }
 
-export function findSelectionSetForInfoPath(
-  options: Pick<GraphQLResolveInfo, 'operation' | 'path'>
-) {
+/**
+ * Given the info.path representing the location in the operation from where the resolver was
+ * triggered, the function finds the selectionSet that matches that path.
+ */
+export function findSelectionSetForInfoPath(info: Pick<GraphQLResolveInfo, 'operation' | 'path'>) {
   return findSelectionSetForPathArray({
-    paths: pathToArray(options.path),
+    paths: pathToArray(info.path),
     pathIndex: 0,
-    selectionSet: options.operation.selectionSet,
+    selectionSet: info.operation.selectionSet,
   })
 }
 
@@ -99,10 +100,11 @@ function findSelectionSetForPathArray(options: {
 }
 
 /**
- * Given a Path, return an Array of the path object in the reversed order.
+ * Given a Path (taken from the resolver argument info.path), it returns an array of the path
+ * object in the right order (from the query field to the most nested field).
  *
  * Inspired by `pathToArray` from 'graphql', but instead of returning only an array of key string,
- * we return the object including both the "key" and the "typename".
+ * it returns the object including both the "key" and the "typename".
  *
  * @see https://github.com/graphql/graphql-js/blob/9a91e338101b94fb1cc5669dd00e1ba15e0f21b3/src/jsutils/Path.ts#L23
  */

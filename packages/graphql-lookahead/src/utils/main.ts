@@ -52,7 +52,7 @@ function lookDeeper<TState>(options: {
   // Get the definition of the parent type in order to get all its possible fields (getFields)
   const typeDefinition = findTypeDefinitionByName(options.schema, options.typeName)
 
-  // This should never happen
+  // This should only happen if options.typeName is invalid
   if (!typeDefinition) return
 
   const childFields = 'getFields' in typeDefinition ? typeDefinition.getFields() : undefined
@@ -60,6 +60,8 @@ function lookDeeper<TState>(options: {
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
     const selectionName = findSelectionName(selection)
+
+    // This should only happen if the selection is invalid
     if (!selectionName) continue
 
     let selectionTypeName: string | undefined
