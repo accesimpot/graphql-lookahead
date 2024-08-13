@@ -1,6 +1,6 @@
 import type { createSchema } from 'graphql-yoga'
 import { lookahead } from 'graphql-lookahead'
-import { mockFullCart } from '../mockData'
+import { mockFullCart, mockPage } from '../mockData'
 
 type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
 
@@ -12,11 +12,11 @@ interface QueryFilter {
 export const resolvers: Resolver = {
   Query: {
     order: (_parent, _args, context, info) => {
-      const queryFilters: QueryFilter = {}
+      const sequelizeQueryFilters: QueryFilter = {}
 
       lookahead({
         info,
-        state: queryFilters,
+        state: sequelizeQueryFilters,
 
         next({ state, typeName }) {
           const nextState: QueryFilter = { model: typeName }
@@ -29,7 +29,10 @@ export const resolvers: Resolver = {
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
-      context.request.metaData = { ...context.request.metaData, 'Query.order': { queryFilters } }
+      context.request.metaData = {
+        ...context.request.metaData,
+        'Query.order': { sequelizeQueryFilters },
+      }
 
       return mockFullCart
     },
@@ -45,11 +48,11 @@ export const resolvers: Resolver = {
 
   ProductPageContent: {
     products: (_parent, _args, context, info) => {
-      const queryFilters: QueryFilter = {}
+      const sequelizeQueryFilters: QueryFilter = {}
 
       lookahead({
         info,
-        state: queryFilters,
+        state: sequelizeQueryFilters,
 
         next({ state, typeName }) {
           const nextState: QueryFilter = { model: typeName }
@@ -64,13 +67,10 @@ export const resolvers: Resolver = {
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
-        'ProductPageContent.products': { queryFilters },
+        'ProductPageContent.products': { sequelizeQueryFilters },
       }
 
-      return [
-        { ...mockFullCart.items[0].product, id: '34' },
-        { ...mockFullCart.items[0].product, id: '36' },
-      ]
+      return mockPage.content.products
     },
   },
 }

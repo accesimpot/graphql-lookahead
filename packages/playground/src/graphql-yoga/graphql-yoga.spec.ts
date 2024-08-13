@@ -3,7 +3,7 @@ import { createSchema, createYoga } from 'graphql-yoga'
 import { buildHTTPExecutor } from '@graphql-tools/executor-http'
 import { resolvers } from './resolvers'
 import { typeDefs } from './typeDefs'
-import { mockFullCart } from '../mockData'
+import { mockFullCart, mockPage } from '../mockData'
 import { getFixtureQuery } from '../utils/graphql'
 import { useMetaPlugin } from './plugins/useMetaPlugin'
 
@@ -27,7 +27,7 @@ describe('graphql-yoga', () => {
     })
 
     it('has fully nested query filters in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].queryFilters).toEqual({
+      expect(result.extensions?.meta?.['Query.order'].sequelizeQueryFilters).toEqual({
         include: [
           {
             model: 'OrderItem',
@@ -51,13 +51,31 @@ describe('graphql-yoga', () => {
     })
 
     it('has partial query filters in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].queryFilters).toEqual({
+      expect(result.extensions?.meta?.['Query.order'].sequelizeQueryFilters).toEqual({
         include: [
           {
             model: 'OrderItem',
             include: [{ model: 'ProductGroup' }],
           },
         ],
+      })
+    })
+  })
+
+  describe('when it sends cart query and a query with inline fragment', async () => {
+    describe('when lookahead is called within non-Query resolver', async () => {
+      const result = await execute({
+        document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
+      })
+
+      it('returns partial cart data', () => {
+        expect(result.data).toEqual({ order: mockFullCart, page: mockPage })
+      })
+
+      it('has only the deepest query filter in meta data', () => {
+        expect(
+          result.extensions?.meta?.['ProductPageContent.products'].sequelizeQueryFilters
+        ).toEqual({ include: [{ model: 'Inventory' }] })
       })
     })
   })
