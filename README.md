@@ -5,22 +5,26 @@
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 
-Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (`info.operation`). This allows you to avoid querying nested database relationships if they are not requested.
+Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (query or mutation).
 
-- [Features](#features)
+- [Highlights](#highlights)
 - [Quick Setup](#quick-setup)
 - [Basic usage](#basic-usage)
   - [Types](#types)
   - [Options](#options)
 - [Advanced usage](#advanced-usage)
   - [Example: Sequelize with nested query filters](#example-sequelize-with-nested-query-filters)
+  - [More examples in integration tests](#more-examples-in-integration-tests)
+- [Playground](#playground)
 - [Contribution](#contribution)
 
-## Features
+## Highlights
 
-- ⛰ &nbsp;Foo
-- 🚠 &nbsp;Bar
-- 🌲 &nbsp;Baz
+- ⚡️ Performant - Avoid querying nested database relationships if they are not requested.
+- 🎯 Accurate - Check for `fieldName`, `typeName`. Check for a specific hierarchy of fields.
+- 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
+- 💪 Reliable - Fully covered by both unit and integration tests.
+- 🏀 Accessible - Run this repository locally and use the playground.
 
 ## Quick Setup
 
@@ -84,8 +88,8 @@ type HandlerDetails<TState> = {
 
 ### Options
 
-| name | description |
-| ------ | ----------- |
+| Name | Description |
+| ------ | :---------- |
 | `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
 | `next` | ❔ _Optional_ - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
 | `state` | ❔ _Optional_ - Initial state used in `next` handler. See [Advanced usage](#advanced-usage).|
@@ -156,6 +160,23 @@ export const resolvers: Resolver = {
   },
 }
 ```
+
+### More examples in integration tests
+
+- See [graphql-yoga](packages/playground/src/graphql-yoga) directory
+
+## Playground
+
+You can play around with `lookahead` and our mock schema by cloning this repository and running the `dev` script locally (requires [pnpm](https://pnpm.io/installation)).
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Visit the playground at http://localhost:4455/graphql 🚀
+
+<img width="1438" alt="image" src="https://github.com/user-attachments/assets/7e20caf7-05fd-43f7-8aef-0fad03a70dfe">
 
 ## Contribution
 
