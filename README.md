@@ -66,7 +66,7 @@ export const resolvers: Resolver = {
       // add your condition
 
       if (lookahead({ info, until: ({ fieldName }) => fieldName === 'product' })) {
-        // then do something
+        // include product in the query
       }
       // ...
     },
