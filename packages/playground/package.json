@@ -1,11 +1,13 @@
 {
   "private": true,
   "name": "playground",
+  "main": "./dist/index.js",
   "type": "module",
   "scripts": {
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm build --watch\" \"nodemon --delay 100ms --inspect --watch ./src/schema.gql ./dist/graphql-yoga --watch ../graphql-lookahead/dist -e js dist/graphql-yoga\"",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
-    "start": "pnpm run start:graphql-yoga",
-    "start:graphql-yoga": "node dist/fixtures/graphql-yoga/index.js",
+    "start": "pnpm start:graphql-yoga",
+    "start:graphql-yoga": "node dist/graphql-yoga",
     "test": "vitest --run"
   },
   "imports": {
@@ -14,11 +16,14 @@
   "devDependencies": {
     "@graphql-tools/executor-http": "^1.1.5",
     "@types/node": "^20.14.8",
+    "concurrently": "^8.2.2",
     "dev-utils": "workspace:*",
+    "graphql-lookahead": "workspace:*",
     "glob": "^11.0.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.6.3",
     "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.4",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
     "vitest": "^2.0.5"

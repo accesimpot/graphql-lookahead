@@ -1,0 +1,21 @@
+query partialCart {
+  order {
+    __typename
+    status
+
+    items {
+      __typename
+      price
+      quantity
+
+      productGroup {
+        __typename
+        name
+        categories
+      }
+    }
+    tax
+    subtotal
+    total
+  }
+}

@@ -35,11 +35,17 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: pnpm install
 
+      - name: Build all packages 📦
+        run: pnpm -r build
+
+      - name: Run type check 🚨
+        run: pnpm types:check
+
       - name: Run linter 👀
-        run: pnpm run lint
+        run: pnpm lint
 
       - name: Run format check 💄
-        run: pnpm run format:check
+        run: pnpm format:check
 
       - name: Run tests 🧪
-        run: pnpm run test
+        run: pnpm test

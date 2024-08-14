@@ -1,1 +1,1 @@
-export const TEST_DIR = 'teeest build'
+export * from './utils/main'

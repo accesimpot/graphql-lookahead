@@ -1,5 +1,6 @@
 type Query {
   order: Order
+  page: Page
 }
 
 type Order {
@@ -15,6 +16,7 @@ type Inventory {
 }
 
 type Product {
+  id: ID!
   color: String
   size: String
   inventory: Inventory!
@@ -30,4 +32,19 @@ type OrderItem {
   productGroup: ProductGroup
   price: Int!
   quantity: Int!
+}
+
+type Page {
+  content: PageContent
+}
+
+union PageContent = HomepageContent | ProductPageContent
+
+type HomepageContent {
+  title: String
+}
+
+type ProductPageContent {
+  title: String
+  products: [Product!]
 }

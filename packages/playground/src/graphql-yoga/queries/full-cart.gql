@@ -1,20 +1,29 @@
-query cart {
+query fullCart {
   order {
+    __typename
     status
+
     items {
+      __typename
+      price
+      quantity
+
       product {
+        __typename
+        id
         color
         size
         inventory {
+          __typename
           stock
         }
       }
+
       productGroup {
+        __typename
         name
         categories
       }
-      price
-      quantity
     }
     tax
     subtotal
