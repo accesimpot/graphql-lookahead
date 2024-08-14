@@ -1,6 +1,6 @@
 {
   "name": "graphql-lookahead",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "GraphQL Lookahead in Typescript to check if some fields are present in the operation",
   "repository": "pmrotule/graphql-lookahead",
   "license": "MIT",
