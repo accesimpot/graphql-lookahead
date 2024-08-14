@@ -17,6 +17,11 @@ jobs:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           fetch-depth: 0
 
+      # https://nx.dev/packages/nx/documents/affected
+      - name: Set SHAs for `nx affected` commands
+        id: setSHAs
+        uses: nrwl/nx-set-shas@v4
+
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
         with:
@@ -31,7 +36,23 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: pnpm install --prod=false
 
+      - name: Any change affecting the main package❔
+        id: main-package-affected
+        # Make sure the job fails with exit code 1 if the nx command fails
+        run: |
+          projects=$(yarn --silent nx show projects --projects main --affected || echo 'error')
+          [ "$projects" == 'error' ] && exit 1
+
+          array=($projects)
+
+          echo "count=${#array[@]}" >> $GITHUB_OUTPUT
+
+      - name: Build main package 📦
+        if: steps.main-package-affected.outputs.count > 0
+        run: pnpm main build
+
       - name: Release
+        if: steps.main-package-affected.outputs.count > 0
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

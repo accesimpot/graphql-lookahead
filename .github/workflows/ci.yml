@@ -20,6 +20,14 @@ jobs:
     steps:
       - name: Checkout branch 🛎
         uses: actions/checkout@v4
+        with:
+          # Required for step: Set SHAs for `nx affected` commands
+          fetch-depth: 0
+
+      # https://nx.dev/nx-api/nx/documents/affected
+      - name: Set SHAs for `nx affected` commands
+        id: setSHAs
+        uses: nrwl/nx-set-shas@v4
 
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
@@ -35,17 +43,38 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: pnpm install --prod=false
 
+      - name: Any change made to packages❔
+        id: affected
+        # Make sure the job fails with exit code 1 if the nx command fails
+        run: |
+          projects=$(yarn --silent nx show projects --affected || echo 'error')
+          [ "$projects" == 'error' ] && exit 1
+
+          array=($projects)
+
+          echo "count=${#array[@]}" >> $GITHUB_OUTPUT
+
       - name: Build all packages 📦
-        run: pnpm -r build
+        if: steps.affected.outputs.count > 0
+        run: pnpm build
 
       - name: Run type check 🚨
+        if: steps.affected.outputs.count > 0
         run: pnpm types:check
 
       - name: Run linter 👀
-        run: pnpm lint
+        # Running linter even if no package has changes since we also want to lint Github workflows.
+        # Only running against files changed in the current PR.
+        run: |
+          pnpm lint:base $(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} | grep -E "\.[mc]?[jt]s$" | xargs)
 
       - name: Run format check 💄
-        run: pnpm format:check
+        # Only running against files changed in the current PR
+        run: |
+          pnpm format:check $(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} | grep -E "\.([mc]?[jt]s|json|ya?ml|gql|graphql)$" | xargs)
 
       - name: Run tests 🧪
+        if: steps.affected.outputs.count > 0
+        # Not running with "nx affected" since we need to run the playground integration tests even
+        # if there is no change in the playground package
         run: pnpm test
