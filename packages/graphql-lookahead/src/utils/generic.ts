@@ -109,7 +109,7 @@ function findSelectionSetForPathArray(options: {
  * @see https://github.com/graphql/graphql-js/blob/9a91e338101b94fb1cc5669dd00e1ba15e0f21b3/src/jsutils/Path.ts#L23
  */
 export function pathToArray(
-  path: Readonly<GraphQLResolveInfo['path']> | undefined
+  path: GraphQLResolveInfo['path'] | undefined
 ): GraphQLResolveInfo['path'][] {
   const flattened = []
   let prev = path
