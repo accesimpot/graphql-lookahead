@@ -176,7 +176,7 @@ pnpm dev
 
 Visit the playground at http://localhost:4455/graphql 🚀
 
-<img width="1438" alt="image" src="https://github.com/user-attachments/assets/7e20caf7-05fd-43f7-8aef-0fad03a70dfe">
+<img width="1440" alt="image" src="https://github.com/user-attachments/assets/924a6e88-abb5-4f66-a822-cae93bc34061">
 
 ## Contribution
 
