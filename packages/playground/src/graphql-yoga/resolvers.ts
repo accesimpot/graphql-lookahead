@@ -18,8 +18,8 @@ export const resolvers: Resolver = {
         info,
         state: sequelizeQueryFilters,
 
-        next({ state, typeName }) {
-          const nextState: QueryFilter = { model: typeName }
+        next({ state, type }) {
+          const nextState: QueryFilter = { model: type }
 
           state.include = state.include || []
           state.include.push(nextState)
@@ -54,8 +54,8 @@ export const resolvers: Resolver = {
         info,
         state: sequelizeQueryFilters,
 
-        next({ state, typeName }) {
-          const nextState: QueryFilter = { model: typeName }
+        next({ state, type }) {
+          const nextState: QueryFilter = { model: type }
 
           state.include = state.include || []
           state.include.push(nextState)

@@ -17,8 +17,8 @@
     "node": "^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0"
   },
   "scripts": {
-    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm -F=main dev\" \"pnpm -F=playground dev\"",
-    "build": "pnpm -F=main build",
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm main dev\" \"pnpm playground dev\"",
+    "build": "nx run-many -t build",
     "lint": "pnpm lint:all",
     "lint:fix": "pnpm lint:all:fix",
     "lint:all": "pnpm lint:base .",
@@ -28,8 +28,11 @@
     "lint:base": "eslint --cache",
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
-    "types:check": "pnpm -F=main types:check",
-    "test": "pnpm -r test"
+    "types:check": "nx run-many -t types:check",
+    "test": "nx run-many -t test",
+    "dev-utils": "bash -c 'nx ${0} dev-utils $@'",
+    "main": "bash -c 'nx ${0} main $@'",
+    "playground": "bash -c 'nx ${0} playground $@'"
   },
   "exports": {
     ".": "./packages/graphql-lookahead/dist/index.js"
@@ -51,7 +54,8 @@
     "prettier": "^3.3.3",
     "semantic-release": "^24.0.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.1"
+    "typescript-eslint": "^8.0.1",
+    "nx": "19.5.7"
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"
