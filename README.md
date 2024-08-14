@@ -10,7 +10,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 ❤️ Provided by [Accès Impôt](https://www.acces-impot.com)'s engineering team
 
 <a href="https://www.acces-impot.com" target="_blank">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/4bbcda39-dadd-4596-b39b-c3150c280958">
+  <img width="348" alt="image" src="https://github.com/user-attachments/assets/4bbcda39-dadd-4596-b39b-c3150c280958">
 </a>
 
 _Online tax declaration service_
