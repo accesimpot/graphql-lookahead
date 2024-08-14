@@ -129,6 +129,9 @@ importers:
       graphql-yoga:
         specifier: ^5.6.3
         version: 5.6.3(graphql@16.9.0)
+      main:
+        specifier: workspace:*
+        version: link:../graphql-lookahead
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
