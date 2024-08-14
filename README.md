@@ -7,11 +7,15 @@
 
 Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (query or mutation).
 
+<br>
+
 ❤️ Provided by [Accès Impôt](https://www.acces-impot.com)'s engineering team
 
 | <a href="https://www.acces-impot.com" target="_blank"><img width="338" alt="Accès Impôt" src="https://github.com/user-attachments/assets/79aa6364-51d1-4482-b31e-680568d647f0"></a> |
 | :---: |
 | 🇨🇦 _Online tax declaration service_ 🇨🇦 |
+
+<br>
 
 ## Table of contents
 
@@ -26,6 +30,8 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - [Playground](#playground)
 - [Contribution](#contribution)
 
+<br>
+
 ## Highlights
 
 - ⚡️ Performant - Avoid querying nested database relationships if they are not requested.
@@ -33,6 +39,8 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
 - 💪 Reliable - Fully covered by both unit and integration tests.
 - 🏀 Accessible - Clone this repository and try it out locally using the playground.
+
+<br>
 
 ## Quick Setup
 
@@ -48,6 +56,8 @@ yarn add graphql-lookahead
 # npm
 npm i graphql-lookahead
 ```
+
+<br>
 
 ## Basic usage
 
@@ -74,6 +84,8 @@ export const resolvers: Resolver = {
 }
 ```
 
+<br>
+
 ### Types
 
 ```ts
@@ -94,6 +106,8 @@ type HandlerDetails<TState> = {
 }
 ```
 
+<br>
+
 ### Options
 
 | Name | Description |
@@ -103,11 +117,15 @@ type HandlerDetails<TState> = {
 | `state` | ❔ _Optional_ - Initial state used in `next` handler. See [Advanced usage](#advanced-usage).|
 | `until` | ❔ _Optional_ - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well. |
 
+<br>
+
 ## Advanced usage
 
 You can pass a `state` and use the `next` option that will be called for every nested field within the operation. It is similar to `until`, but `next` can mutate the parent state and return the next state that will be passed to its child fields. You will still need the `until` option if you want to stop the iteration at some point (optional).
 
 If your schema matches your database models, you could build the query filters like this:
+
+<br>
 
 ### Example: Sequelize with nested query filters
 
@@ -169,9 +187,13 @@ export const resolvers: Resolver = {
 }
 ```
 
+<br>
+
 ### More examples in integration tests
 
 - See [graphql-yoga](packages/playground/src/graphql-yoga) directory
+
+<br>
 
 ## Playground
 
@@ -185,6 +207,10 @@ pnpm dev
 Visit the playground at http://localhost:4455/graphql 🚀
 
 <img width="1440" alt="image" src="https://github.com/user-attachments/assets/924a6e88-abb5-4f66-a822-cae93bc34061">
+
+<br>
+<br>
+<br>
 
 ## Contribution
 
@@ -203,9 +229,6 @@ Visit the playground at http://localhost:4455/graphql 🚀
 
   # Run Vitest
   pnpm test
-
-  # Release new version
-  pnpm release
   ```
 </details>
 
