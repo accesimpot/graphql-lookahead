@@ -7,6 +7,16 @@
 
 Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (query or mutation).
 
+❤️ Provided by [Accès Impôt](https://www.acces-impot.com)'s engineering team
+
+<a href="https://www.acces-impot.com" target="_blank">
+  <img width="400" alt="image" src="https://github.com/user-attachments/assets/4bbcda39-dadd-4596-b39b-c3150c280958">
+</a>
+
+_Online tax declaration service_
+
+## Table of contents
+
 - [Highlights](#highlights)
 - [Quick Setup](#quick-setup)
 - [Basic usage](#basic-usage)
@@ -24,7 +34,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - 🎯 Accurate - Check for `fieldName`, `typeName`. Check for a specific hierarchy of fields.
 - 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
 - 💪 Reliable - Fully covered by both unit and integration tests.
-- 🏀 Accessible - Run this repository locally and use the playground.
+- 🏀 Accessible - Clone this repository and try it out locally using the playground.
 
 ## Quick Setup
 
@@ -43,7 +53,7 @@ npm i graphql-lookahead
 
 ## Basic usage
 
-You can add a condition using the `until` option which will be called for every nested field within the operation starting from the field of the resolver that runs the check.
+You can add a condition using the `until` option which will be called for every nested field within the operation starting from the resolver field.
 
 ```ts
 import type { createSchema } from 'graphql-yoga'
