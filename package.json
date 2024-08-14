@@ -5,6 +5,14 @@
   "repository": "pmrotule/graphql-lookahead",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "graphql",
+    "lookahead",
+    "graphql lookahead",
+    "resolve info",
+    "query",
+    "performance"
+  ],
   "engines": {
     "node": "20.16.0"
   },
