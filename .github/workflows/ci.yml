@@ -33,7 +33,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies 👨🏻‍💻
-        run: pnpm install --prod
+        run: pnpm install --prod=false
 
       - name: Build all packages 📦
         run: pnpm -r build
