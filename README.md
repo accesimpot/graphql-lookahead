@@ -29,7 +29,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 ## Highlights
 
 - ⚡️ Performant - Avoid querying nested database relationships if they are not requested.
-- 🎯 Accurate - Check for `fieldName`, `typeName`. Check for a specific hierarchy of fields.
+- 🎯 Accurate - Check for the `field` or `type`  name. Check for a specific hierarchy of fields.
 - 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
 - 💪 Reliable - Fully covered by both unit and integration tests.
 - 🏀 Accessible - Clone this repository and try it out locally using the playground.
@@ -65,7 +65,7 @@ export const resolvers: Resolver = {
       //
       // add your condition
 
-      if (lookahead({ info, until: ({ fieldName }) => fieldName === 'product' })) {
+      if (lookahead({ info, until: ({ field }) => field === 'product' })) {
         // include product in the query
       }
       // ...
@@ -87,10 +87,10 @@ function lookahead<TState>(options: {
 }): boolean
 
 type HandlerDetails<TState> = {
-  fieldName: string
+  field: string
   selectionSet: SelectionSetNode
   state: TState
-  typeName: string
+  type: string
 }
 ```
 
@@ -136,8 +136,8 @@ export const resolvers: Resolver = {
         info,
         state: sequelizeQueryFilters,
 
-        next({ state, typeName }) {
-          const nextState: QueryFilter = { model: typeName }
+        next({ state, type }) {
+          const nextState: QueryFilter = { model: type }
 
           state.include = state.include || []
           state.include.push(nextState)

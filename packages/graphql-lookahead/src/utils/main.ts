@@ -7,10 +7,10 @@ import {
 } from './generic'
 
 type HandlerDetails<TState> = {
-  fieldName: string
+  field: string
   selectionSet: SelectionSetNode
   state: TState
-  typeName: string
+  type: string
 }
 
 /**
@@ -43,7 +43,7 @@ export function lookahead<TState>(options: {
       schema: info.schema,
       selectionSet,
       state,
-      typeName: returnTypeName,
+      type: returnTypeName,
       until: options.until,
     })
   }
@@ -64,7 +64,7 @@ export function lookDeeper<TState>(options: {
   schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
   state: TState
-  typeName: string
+  type: string
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean {
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
@@ -78,13 +78,13 @@ function lookDeeperWithDefaults<TState>(options: {
   schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
   state: TState
-  typeName: string
+  type: string
   until: (details: HandlerDetails<TState>) => boolean
 }): boolean | void {
   // Get the definition of the parent type in order to get all its possible fields (getFields)
-  const typeDefinition = findTypeDefinitionByName(options.schema, options.typeName)
+  const typeDefinition = findTypeDefinitionByName(options.schema, options.type)
 
-  // This should only happen if options.typeName is invalid
+  // This should only happen if options.type is invalid
   if (!typeDefinition) return
 
   const childFields = 'getFields' in typeDefinition ? typeDefinition.getFields() : undefined
@@ -111,7 +111,7 @@ function lookDeeperWithDefaults<TState>(options: {
       const sharedArgs = {
         selectionSet: selection.selectionSet,
         state: options.state,
-        typeName: selectionTypeName,
+        type: selectionTypeName,
       }
       const lookUntilArgs: Required<typeof options> = {
         ...sharedArgs,
@@ -121,7 +121,7 @@ function lookDeeperWithDefaults<TState>(options: {
       }
       const handlerArgs: HandlerDetails<TState> = {
         ...sharedArgs,
-        fieldName: selectionName,
+        field: selectionName,
       }
 
       if (options.until(handlerArgs)) return true
