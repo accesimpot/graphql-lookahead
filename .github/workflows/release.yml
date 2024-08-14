@@ -29,10 +29,10 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies 👨🏻‍💻
-        run: pnpm install
+        run: pnpm install --prod=false
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: pnpm semantic-release
