@@ -92,7 +92,7 @@ export const resolvers: Resolver = {
 import type { GraphQLResolveInfo, SelectionSetNode } from 'graphql'
 
 function lookahead<TState>(options: {
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'returnType' | 'path'>
+  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
@@ -100,7 +100,7 @@ function lookahead<TState>(options: {
 
 type HandlerDetails<TState> = {
   field: string
-  selectionSet: SelectionSetNode
+  selection: SelectionNode
   state: TState
   type: string
 }

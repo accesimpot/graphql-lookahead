@@ -1,4 +1,4 @@
-import type { GraphQLResolveInfo, SelectionSetNode } from 'graphql'
+import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
 import {
   findTypeName,
   findTypeDefinitionByName,
@@ -8,7 +8,7 @@ import {
 
 type HandlerDetails<TState> = {
   field: string
-  selectionSet: SelectionSetNode
+  selection: SelectionNode
   state: TState
   type: string
 }
@@ -24,7 +24,7 @@ type HandlerDetails<TState> = {
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState>(options: {
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'returnType' | 'path'>
+  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
@@ -39,8 +39,8 @@ export function lookahead<TState>(options: {
 
   if (selectionSet) {
     return lookDeeper({
+      info,
       next: options.next,
-      schema: info.schema,
       selectionSet,
       state,
       type: returnTypeName,
@@ -60,8 +60,8 @@ export function lookahead<TState>(options: {
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookDeeper<TState>(options: {
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState
-  schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
   state: TState
   type: string
@@ -74,15 +74,15 @@ export function lookDeeper<TState>(options: {
 }
 
 function lookDeeperWithDefaults<TState>(options: {
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next: (details: HandlerDetails<TState>) => TState
-  schema: GraphQLResolveInfo['schema']
   selectionSet: SelectionSetNode
   state: TState
   type: string
   until: (details: HandlerDetails<TState>) => boolean
 }): boolean | void {
   // Get the definition of the parent type in order to get all its possible fields (getFields)
-  const typeDefinition = findTypeDefinitionByName(options.schema, options.type)
+  const typeDefinition = findTypeDefinitionByName(options.info.schema, options.type)
 
   // This should only happen if options.type is invalid
   if (!typeDefinition) return
@@ -97,36 +97,51 @@ function lookDeeperWithDefaults<TState>(options: {
     if (!selectionName) continue
 
     let selectionTypeName: string | undefined
+    let nextSelectionSet: SelectionSetNode | undefined
+    let isFragmentSelection = false
 
-    if (childFields && selectionName in childFields) {
-      selectionTypeName = findTypeName(childFields[selectionName].type)
-    } else if ('typeCondition' in selection) {
-      // The type condition means it's an inline fragment,
-      // but it also means we already know the selection type name
-      selectionTypeName = selection.typeCondition?.name.value
+    if (selection.kind === 'FragmentSpread') {
+      isFragmentSelection = true
+
+      const fragmentDefinition = options.info.fragments[selectionName]
+      selectionTypeName = fragmentDefinition.typeCondition.name.value
+      nextSelectionSet = fragmentDefinition.selectionSet
+    } else {
+      if ('selectionSet' in selection && selection.selectionSet) {
+        nextSelectionSet = selection.selectionSet
+      }
+      if (selection.kind === 'InlineFragment') {
+        isFragmentSelection = true
+        selectionTypeName = selection.typeCondition?.name.value
+      } else if (childFields && selectionName in childFields) {
+        selectionTypeName = findTypeName(childFields[selectionName].type)
+      }
     }
 
     // Dig deeper if the field is an object with nested selections
-    if (selectionTypeName && 'selectionSet' in selection && selection.selectionSet) {
+    if (selectionTypeName && nextSelectionSet) {
       const sharedArgs = {
-        selectionSet: selection.selectionSet,
         state: options.state,
         type: selectionTypeName,
       }
       const lookUntilArgs: Required<typeof options> = {
         ...sharedArgs,
+        info: options.info,
         next: options.next,
-        schema: options.schema,
+        selectionSet: nextSelectionSet,
         until: options.until,
       }
       const handlerArgs: HandlerDetails<TState> = {
         ...sharedArgs,
         field: selectionName,
+        selection,
       }
 
-      if (options.until(handlerArgs)) return true
+      if (!isFragmentSelection) {
+        if (options.until(handlerArgs)) return true
 
-      lookUntilArgs.state = options.next(handlerArgs)
+        lookUntilArgs.state = options.next(handlerArgs)
+      }
 
       // The function looks deeper in the operation by calling itself
       const returnValue = lookDeeperWithDefaults(lookUntilArgs)
