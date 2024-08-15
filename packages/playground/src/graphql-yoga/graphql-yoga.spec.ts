@@ -62,17 +62,20 @@ describe('graphql-yoga', () => {
     })
   })
 
-  describe('when it sends cart query and a query with inline fragment', async () => {
+  describe('when it sends full cart query and product page query with alias and fragments', async () => {
     describe('when lookahead is called within non-Query resolver', async () => {
       const result = await execute({
         document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
       })
 
-      it('returns partial cart data', () => {
-        expect(result.data).toEqual({ order: mockFullCart, page: mockPage })
+      it('returns full cart data with alias', () => {
+        expect(result.data).toEqual({
+          order: getMockFullCartWithProductGroupAlias(),
+          page: mockPage,
+        })
       })
 
-      it('has only the deepest query filter in meta data', () => {
+      it('has only the deepest query filter in ProductPageContent meta data', () => {
         expect(
           result.extensions?.meta?.['ProductPageContent.products'].sequelizeQueryFilters
         ).toEqual({ include: [{ model: 'Inventory' }] })
@@ -88,6 +91,21 @@ function getMockPartialCart() {
     const itemCopy = { ...item }
     // @ts-expect-error Not relevant in test
     delete itemCopy.product
+    items.push(itemCopy)
+  })
+
+  return { ...mockFullCart, items }
+}
+
+function getMockFullCartWithProductGroupAlias() {
+  const items = [] as (typeof mockFullCart)['items']
+
+  mockFullCart.items.forEach(item => {
+    const itemCopy = { ...item }
+    // @ts-expect-error Not relevant in test
+    itemCopy.group = itemCopy.productGroup
+    // @ts-expect-error Not relevant in test
+    delete itemCopy.productGroup
     items.push(itemCopy)
   })
 

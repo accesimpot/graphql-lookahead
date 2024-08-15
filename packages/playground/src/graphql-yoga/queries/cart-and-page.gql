@@ -9,17 +9,10 @@ query cart {
       quantity
 
       product {
-        __typename
-        id
-        color
-        size
-        inventory {
-          __typename
-          stock
-        }
+        ...ProductFragment
       }
 
-      productGroup {
+      group: productGroup {
         __typename
         name
         categories
@@ -38,17 +31,20 @@ query cart {
 
       ... on ProductPageContent {
         products {
-          __typename
-          id
-          color
-          size
-
-          inventory {
-            __typename
-            stock
-          }
+          ...ProductFragment
         }
       }
     }
+  }
+}
+
+fragment ProductFragment on Product {
+  __typename
+  id
+  color
+  size
+  inventory {
+    __typename
+    stock
   }
 }
