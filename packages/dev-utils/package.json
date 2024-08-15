@@ -7,10 +7,10 @@
     "build": "tsc --project tsconfig.compiler.json"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
+    "@types/node": "^20.14.15",
     "glob": "^11.0.0",
     "typescript": "^5.5.4",
-    "vite": "^5.3.5",
-    "vite-plugin-dts": "^4.0.1"
+    "vite": "^5.4.1",
+    "vite-plugin-dts": "^4.0.3"
   }
 }
