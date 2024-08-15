@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { globSync } from 'glob'
 import { defineConfig } from 'vite'
-import type { PluginOption } from 'vite'
+import type { PluginOption, LibraryFormats } from 'vite'
 import dts from 'vite-plugin-dts'
 
 const SRC_DIR = 'src'
@@ -17,8 +17,15 @@ export function generateViteConfig(options: {
   srcDir?: string
   distDir?: string
   pluginCategories?: `${PLUGIN_CATEGORIES}`[]
+  formats?: LibraryFormats[]
 }) {
-  const { absoluteRootDir, srcDir = SRC_DIR, distDir = DIST_DIR, pluginCategories = [] } = options
+  const {
+    absoluteRootDir,
+    srcDir = SRC_DIR,
+    distDir = DIST_DIR,
+    pluginCategories = [],
+    formats = ['es'],
+  } = options
 
   const absoluteSrcDir = path.resolve(absoluteRootDir, srcDir)
   const absoluteDistDir = path.resolve(absoluteRootDir, distDir)
@@ -61,17 +68,13 @@ export function generateViteConfig(options: {
       outDir: absoluteDistDir,
       lib: {
         entry: getPreservedInputMapping(absoluteSrcDir),
-        formats: ['es'],
+        formats,
       },
       sourcemap: true,
       emptyOutDir: true,
       dynamicImportVarsOptions: { exclude: '**/*' },
 
       rollupOptions: {
-        output: {
-          dir: absoluteDistDir,
-          format: 'esm',
-        },
         external: [...getDependenciesFromPackageJson(absoluteRootDir), /^node:/],
       },
     },
@@ -102,7 +105,12 @@ function getDependenciesFromPackageJson(absoluteRootDir: string): string[] {
   const pkgJsonFilePath = path.join(absoluteRootDir, 'package.json')
   const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFilePath, 'utf-8')) as {
     dependencies: Record<string, string>
+    peerDependencies: Record<string, string>
     devDependencies: Record<string, string>
   }
-  return Object.keys({ ...pkgJson.dependencies, ...pkgJson.devDependencies })
+  return Object.keys({
+    ...pkgJson.dependencies,
+    ...pkgJson.peerDependencies,
+    ...pkgJson.devDependencies,
+  })
 }

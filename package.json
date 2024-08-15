@@ -35,7 +35,10 @@
     "playground": "bash -c 'nx ${0} playground $@'"
   },
   "exports": {
-    ".": "./packages/graphql-lookahead/dist/index.js"
+    ".": {
+      "import": "./packages/graphql-lookahead/dist/index.js",
+      "require": "./packages/graphql-lookahead/dist/index.cjs"
+    }
   },
   "types": "./packages/graphql-lookahead/dist/index.d.ts",
   "files": [

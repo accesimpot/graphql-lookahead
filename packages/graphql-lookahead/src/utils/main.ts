@@ -1,7 +1,7 @@
 import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
 import {
+  getChildFields,
   findTypeName,
-  findTypeDefinitionByName,
   findSelectionName,
   findSelectionSetForInfoPath,
 } from './generic'
@@ -81,14 +81,6 @@ function lookDeeperWithDefaults<TState>(options: {
   type: string
   until: (details: HandlerDetails<TState>) => boolean
 }): boolean | void {
-  // Get the definition of the parent type in order to get all its possible fields (getFields)
-  const typeDefinition = findTypeDefinitionByName(options.info.schema, options.type)
-
-  // This should only happen if options.type is invalid
-  if (!typeDefinition) return
-
-  const childFields = 'getFields' in typeDefinition ? typeDefinition.getFields() : undefined
-
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
     const selectionName = findSelectionName(selection)
@@ -113,8 +105,12 @@ function lookDeeperWithDefaults<TState>(options: {
       if (selection.kind === 'InlineFragment') {
         isFragmentSelection = true
         selectionTypeName = selection.typeCondition?.name.value
-      } else if (childFields && selectionName in childFields) {
-        selectionTypeName = findTypeName(childFields[selectionName].type)
+      } else {
+        const childFields = getChildFields(options.info.schema, options.type)
+
+        if (childFields && selectionName in childFields) {
+          selectionTypeName = findTypeName(childFields[selectionName].type)
+        }
       }
     }
 
