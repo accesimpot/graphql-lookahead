@@ -9,12 +9,12 @@
     "types:check": "tsc --project tsconfig.lint.json"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
+    "@types/node": "^20.14.15",
     "@vitest/coverage-istanbul": "^2.0.5",
     "dev-utils": "workspace:*",
     "graphql": "^16.9.0",
     "typescript": "^5.5.4",
-    "vite": "^5.3.5",
+    "vite": "^5.4.1",
     "vitest": "^2.0.5"
   }
 }
