@@ -1,5 +1,23 @@
 import type { GraphQLType, GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
 
+/**
+ * Returns the child fields of a given type based on its definition in the schema.
+ */
+export function getChildFields(
+  schema: Pick<GraphQLResolveInfo['schema'], 'getType'>,
+  typeName: string
+) {
+  const genericTypeDefinition = schema.getType(typeName)
+  const typeDefinition = genericTypeDefinition
+    ? findTypeDefinition(genericTypeDefinition)
+    : undefined
+
+  // This should only happen if typeName is invalid
+  if (!typeDefinition) return
+
+  return 'getFields' in typeDefinition ? typeDefinition.getFields() : undefined
+}
+
 export function findTypeName(type: GraphQLType) {
   const typeDefinition = findTypeDefinition(type)
   return typeDefinition?.name
@@ -22,11 +40,6 @@ export function findTypeDefinition(type: GraphQLType) {
   if (typeDefinition && 'name' in typeDefinition) return typeDefinition
 }
 
-export function findTypeDefinitionByName(schema: GraphQLResolveInfo['schema'], typeName: string) {
-  const possibleTypeDefinition = schema.getType(typeName)
-  return possibleTypeDefinition ? findTypeDefinition(possibleTypeDefinition) : undefined
-}
-
 export function findSelectionName(selection: SelectionNode) {
   const selectionNameObj =
     // When the selection has a type condition, it means it's an inline fragment
@@ -46,7 +59,11 @@ export function findSelectionName(selection: SelectionNode) {
  * Given the info.path representing the location in the operation from where the resolver was
  * triggered, the function finds the selectionSet that matches that path.
  */
-export function findSelectionSetForInfoPath(info: Pick<GraphQLResolveInfo, 'operation' | 'path'>) {
+export function findSelectionSetForInfoPath(
+  info: Pick<GraphQLResolveInfo, 'path'> & {
+    operation: Pick<GraphQLResolveInfo['operation'], 'selectionSet'>
+  }
+) {
   return findSelectionSetForPathArray({
     paths: pathToArray(info.path),
     pathIndex: 0,
