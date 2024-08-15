@@ -45,20 +45,20 @@
     "packages/graphql-lookahead/dist"
   ],
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^10.1.4",
+    "@semantic-release/github": "^10.1.5",
     "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^14.0.1",
     "@types/eslint__js": "^8.42.3",
     "concurrently": "^8.2.2",
-    "eslint": "^9.8.0",
+    "eslint": "^9.9.0",
+    "nx": "19.5.7",
     "prettier": "^3.3.3",
     "semantic-release": "^24.0.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.1",
-    "nx": "19.5.7"
+    "typescript-eslint": "^8.1.0"
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"
