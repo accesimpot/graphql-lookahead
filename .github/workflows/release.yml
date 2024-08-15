@@ -51,6 +51,12 @@ jobs:
         if: steps.main-package-affected.outputs.count > 0
         run: pnpm main build
 
+      # A release is made if the prefix is feat, fix or perf
+      #
+      # See https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-angular#type
+      #
+      # Prefix definitions: https://github.com/angular/angular/blob/main/CONTRIBUTING.md#type
+      #
       - name: Release
         if: steps.main-package-affected.outputs.count > 0
         env:
