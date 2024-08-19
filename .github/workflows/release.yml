@@ -10,6 +10,10 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+
+    env:
+      NX_NO_CLOUD: ${{ secrets.NX_NO_CLOUD }}
+
     steps:
       - name: Checkout branch 🛎
         uses: actions/checkout@v4
