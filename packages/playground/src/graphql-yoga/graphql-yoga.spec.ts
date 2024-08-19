@@ -38,8 +38,8 @@ describe('graphql-yoga', () => {
       expect(result.extensions?.meta?.['Query.order'].hasQuantityFieldDepthTwo).toBe(true)
     })
 
-    it('has "invalidOnError" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].invalidOnError).toBe(true)
+    it('has "invalidNext" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].invalidNext).toBe(true)
     })
 
     it('logs the runtime error instead of throwing', () => {
@@ -50,8 +50,24 @@ describe('graphql-yoga', () => {
       )
     })
 
-    it('has "invalidOnErrorAndReturnFalse" set to false in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].invalidOnErrorAndReturnFalse).toBe(false)
+    it('has "invalidNextAndOnErrorReturningFalse" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].invalidNextAndOnErrorReturningFalse).toBe(
+        false
+      )
+    })
+
+    it('has "invalidInfoNextAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].invalidInfoNextAndOnErrorReturningUndefined
+      ).toBe(true)
+    })
+
+    it('has "invalidInfoWithoutOnError" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].invalidInfoWithoutOnError).toBe(true)
+    })
+
+    it('has "noSelectionSetMatchingInfoPath" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].noSelectionSetMatchingInfoPath).toBe(false)
     })
 
     it('has fully nested query filters in meta data', () => {

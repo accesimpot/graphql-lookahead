@@ -27,7 +27,7 @@ type HandlerDetails<TState> = {
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
-export function lookahead<TState, RError extends boolean>(options: {
+export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
@@ -57,7 +57,7 @@ export function lookahead<TState, RError extends boolean>(options: {
   }
 }
 
-export function lookaheadAndThrow<TState, RError extends boolean>(options: {
+export function lookaheadAndThrow<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
@@ -103,7 +103,7 @@ export function lookaheadAndThrow<TState, RError extends boolean>(options: {
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
-export function lookDeeper<TState, RError extends boolean>(options: {
+export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState

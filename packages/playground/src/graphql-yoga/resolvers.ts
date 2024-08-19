@@ -40,10 +40,42 @@ export const resolvers: Resolver = {
       })
 
       // @ts-expect-error test invalid `next` option
-      const invalidOnError = lookahead({ info, next: 5 }) // returns true
+      const invalidNext = lookahead({ info, next: 5 }) // returns true
 
-      // @ts-expect-error test invalid `onError` returning false
-      const invalidOnErrorAndReturnFalse = lookahead({ info, next: 'foo', onError: () => false }) // returns false
+      const invalidNextAndOnErrorReturningFalse = lookahead({
+        info,
+        // @ts-expect-error test invalid `next` option and `onError` returning false
+        next: 'foo',
+        onError: () => false,
+      }) // returns false
+
+      const invalidInfoNextAndOnErrorReturningUndefined = lookahead({
+        // @ts-expect-error test invalid `info`
+        info: undefined,
+        // @ts-expect-error test invalid `next` and `onError` options
+        next: 'foo',
+        onError: () => undefined,
+      }) // returns true
+
+      const invalidInfoWithoutOnError = lookahead({
+        // @ts-expect-error test invalid `info`
+        info: undefined,
+        until: ({ field }) => field === 'total',
+      }) // returns true
+
+      const noSelectionSetMatchingInfoPath = lookahead({
+        info: {
+          ...info,
+          operation: {
+            ...info.operation,
+            selectionSet: {
+              ...info.operation.selectionSet,
+              selections: [],
+            },
+          },
+        },
+        until: ({ field }) => field === 'total',
+      }) // returns false
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
@@ -51,8 +83,11 @@ export const resolvers: Resolver = {
         'Query.order': {
           hasQuantityFieldDepthOne,
           hasQuantityFieldDepthTwo,
-          invalidOnError,
-          invalidOnErrorAndReturnFalse,
+          invalidNext,
+          invalidNextAndOnErrorReturningFalse,
+          invalidInfoNextAndOnErrorReturningUndefined,
+          invalidInfoWithoutOnError,
+          noSelectionSetMatchingInfoPath,
           sequelizeQueryFilters,
         },
       }
