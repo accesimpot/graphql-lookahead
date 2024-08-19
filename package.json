@@ -45,6 +45,7 @@
     "packages/graphql-lookahead/dist"
   ],
   "devDependencies": {
+    "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.9.0",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
