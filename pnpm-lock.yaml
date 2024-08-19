@@ -52,7 +52,7 @@ importers:
         version: 16.9.0
       graphql-yoga:
         specifier: ^5.6.3
-        version: 5.6.3(graphql@16.9.0)
+        version: 5.7.0(graphql@16.9.0)
       lodash.clonedeep:
         specifier: ^4.5.0
         version: 4.5.0
@@ -1710,8 +1710,8 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
-  graphql-yoga@5.6.3:
-    resolution: {integrity: sha512-JtZ3r/QdkGpdi+8XfPuG+6Nb+V5wNMg2LYChSIATes5LhcIx3pbOkm/nWoGT/SA5LqlRyp+e0sxmVNEz8qN5TQ==}
+  graphql-yoga@5.7.0:
+    resolution: {integrity: sha512-QyGVvFAvGhMrzjJvhjsxsyoE+e4lNrj5f5qOsRYJuWIjyw7tHfbBvybZIwzNOGY0aB5sgA8BlVvu5hxjdKJ5tQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       graphql: ^15.2.0 || ^16.0.0
@@ -4843,7 +4843,7 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  graphql-yoga@5.6.3(graphql@16.9.0):
+  graphql-yoga@5.7.0(graphql@16.9.0):
     dependencies:
       '@envelop/core': 5.0.1
       '@graphql-tools/executor': 1.3.0(graphql@16.9.0)
