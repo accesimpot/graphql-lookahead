@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: daily
       time: '04:00'
+    commit-message:
+      prefix: chore
+      include: scope
     reviewers:
       - pmrotule
 
@@ -13,5 +16,8 @@ updates:
     schedule:
       interval: 'daily'
       time: '04:00'
+    commit-message:
+      prefix: chore
+      include: scope
     reviewers:
       - pmrotule
