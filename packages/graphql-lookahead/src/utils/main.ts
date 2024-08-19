@@ -20,6 +20,7 @@ type HandlerDetails<TState> = {
  * operation (`info.operation`). This allows you to avoid querying nested database relationships
  * if they are not requested.
  *
+ * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
@@ -27,6 +28,7 @@ type HandlerDetails<TState> = {
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState>(options: {
+  depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -45,6 +47,7 @@ export function lookahead<TState>(options: {
 }
 
 export function lookaheadAndThrow<TState>(options: {
+  depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -61,6 +64,7 @@ export function lookaheadAndThrow<TState>(options: {
 
   if (selectionSet) {
     return lookDeeper({
+      depth: options.depth,
       info,
       next: options.next,
       onError: options.onError,
@@ -77,6 +81,7 @@ export function lookaheadAndThrow<TState>(options: {
  * Iterate over every nested field of the provided `selectionSet` (picked from `info.operation`).
  * You can stop the iteration using the `until` option.
  *
+ * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
@@ -85,6 +90,7 @@ export function lookaheadAndThrow<TState>(options: {
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookDeeper<TState>(options: {
+  depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -105,6 +111,7 @@ export function lookDeeper<TState>(options: {
 }
 
 export function lookDeeperAndThrow<TState>(options: {
+  depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
@@ -112,13 +119,16 @@ export function lookDeeperAndThrow<TState>(options: {
   type: string
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean {
+  const depth: number | null = typeof options.depth === 'number' ? options.depth : null
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
   const until: NonNullable<typeof options.until> = options.until || (() => false)
 
-  return !!lookDeeperWithDefaults({ ...options, next, until })
+  return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, until })
 }
 
 function lookDeeperWithDefaults<TState>(options: {
+  depth: number | null
+  depthIndex: number
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next: (details: HandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
@@ -155,10 +165,15 @@ function lookDeeperWithDefaults<TState>(options: {
         if (nextSelectionSet) lookDeeperState = options.next(handlerArgs)
       }
 
+      // Don't dig deeper if the loop has reached the provided `depth` value
+      if (options.depth !== null && options.depthIndex >= options.depth - 1) continue
+
       // Dig deeper if the field is an object with nested selections
       if (nextSelectionSet) {
         // The function looks deeper in the operation by calling itself
         const returnValue = lookDeeperWithDefaults({
+          depth: options.depth,
+          depthIndex: options.depthIndex + 1,
           info: options.info,
           next: options.next,
           selectionSet: nextSelectionSet,
