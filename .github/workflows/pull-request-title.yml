@@ -15,4 +15,4 @@ jobs:
         with:
           scopes: |
             deps
-            dev-deps
+            deps-dev
