@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { vi, describe, it, expect } from 'vitest'
 import type { ExecutionResult } from 'graphql'
 import { createSchema, createYoga } from 'graphql-yoga'
 import { buildHTTPExecutor } from '@graphql-tools/executor-http'
@@ -18,13 +18,40 @@ describe('graphql-yoga', () => {
     return (await executor(opts)) as ExecutionResult<any, { meta?: Record<string, any> }>
   }
 
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
   describe('when it sends full cart query', async () => {
+    consoleErrorSpy.mockClear()
     const result = await execute({
       document: getFixtureQuery('graphql-yoga/queries/full-cart.gql'),
     })
 
     it('returns full cart data', () => {
       expect(result.data).toEqual({ order: mockFullCart })
+    })
+
+    it('has "hasQuantityFieldDepthOne" set to false in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].hasQuantityFieldDepthOne).toBe(false)
+    })
+
+    it('has "hasQuantityFieldDepthTwo" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].hasQuantityFieldDepthTwo).toBe(true)
+    })
+
+    it('has "invalidOnError" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].invalidOnError).toBe(true)
+    })
+
+    it('logs the runtime error instead of throwing', () => {
+      expect(/[graphql-lookahead]/.test(consoleErrorSpy.mock.calls[0][0])).toBe(true)
+      expect(consoleErrorSpy.mock.calls[0][1] instanceof Error).toBe(true)
+      expect(/options.next is not a function/.test(consoleErrorSpy.mock.calls[0][1].message)).toBe(
+        true
+      )
+    })
+
+    it('has "invalidOnErrorAndReturnFalse" set to false in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].invalidOnErrorAndReturnFalse).toBe(false)
     })
 
     it('has fully nested query filters in meta data', () => {

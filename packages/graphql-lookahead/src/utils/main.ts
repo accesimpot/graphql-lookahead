@@ -23,34 +23,45 @@ type HandlerDetails<TState> = {
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
+ * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
-export function lookahead<TState>(options: {
+export function lookahead<TState, RError extends boolean>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
-  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  onError?: (err: unknown) => RError
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean {
   try {
     return lookaheadAndThrow(options)
   } catch (err) {
-    // Log all errors instead of throwing since `lookahead` is only used for performance improvement
-    // which is not business critical. If you need it to throw on error, use `lookaheadAndThrow`
-    // directly.
-    options.onError ? options.onError(err) : console.error(ERROR_PREFIX, err)
-    return false
+    /**
+     * Return true and log all errors instead of throwing them since `lookahead` is only used for
+     * performance improvement so you should rather proceed when there is a runtime error (it can
+     * come from your handlers). If you need `lookahead` to throw on error, use
+     * `lookaheadAndThrow` directly.
+     *
+     * If `options.onError` is provided and return a boolean, it will be used as the return value
+     * of `lookahead` instead of the default value (`true`).
+     */
+    if (options.onError) {
+      const returnValueOnError = options.onError(err)
+      if (typeof returnValueOnError === 'boolean') return returnValueOnError
+    } else {
+      console.error(ERROR_PREFIX, err)
+    }
+    return true
   }
 }
 
-export function lookaheadAndThrow<TState>(options: {
+export function lookaheadAndThrow<TState, RError extends boolean>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
-  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  onError?: (err: unknown) => RError
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean {
@@ -81,19 +92,22 @@ export function lookaheadAndThrow<TState>(options: {
  * Iterate over every nested field of the provided `selectionSet` (picked from `info.operation`).
  * You can stop the iteration using the `until` option.
  *
+ * @type TState - Initial state used in `next` handler.
+ * @type RError -
+ *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
+ * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
-export function lookDeeper<TState>(options: {
+export function lookDeeper<TState, RError extends boolean>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState
-  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
   state: TState
   type: string
@@ -102,11 +116,22 @@ export function lookDeeper<TState>(options: {
   try {
     return lookDeeperAndThrow(options)
   } catch (err) {
-    // Log all errors instead of throwing since `lookDeeper` is only used for performance improvement
-    // which is not business critical. If you need it to throw on error, use `lookDeeperAndThrow`
-    // directly.
-    options.onError ? options.onError(err) : console.error(ERROR_PREFIX, err)
-    return false
+    /**
+     * Return true and log all errors instead of throwing them since `lookDeeper` is only used for
+     * performance improvement so you should rather proceed when there is a runtime error (it can
+     * come from your handlers). If you need `lookDeeper` to throw on error, use
+     * `lookDeeperAndThrow` directly.
+     *
+     * If `options.onError` is provided and return a boolean, it will be used as the return value
+     * of `lookDeeper` instead of the default value (`true`).
+     */
+    if (options.onError) {
+      const returnValueOnError = options.onError(err)
+      if (typeof returnValueOnError === 'boolean') return returnValueOnError
+    } else {
+      console.error(ERROR_PREFIX, err)
+    }
+    return true
   }
 }
 
