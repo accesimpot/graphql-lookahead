@@ -20,7 +20,7 @@ type HandlerDetails<TState> = {
  * operation (`info.operation`). This allows you to avoid querying nested database relationships
  * if they are not requested.
  *
- * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
+ * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
@@ -95,7 +95,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  * @type TState - Initial state used in `next` handler.
  * @type RError -
  *
- * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit).
+ * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
