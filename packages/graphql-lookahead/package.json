@@ -9,7 +9,7 @@
     "types:check": "tsc --project tsconfig.lint.json"
   },
   "devDependencies": {
-    "@types/node": "^20.14.15",
+    "@types/node": "^22.4.1",
     "dev-utils": "workspace:*",
     "graphql": "^16.9.0",
     "typescript": "^5.5.4",

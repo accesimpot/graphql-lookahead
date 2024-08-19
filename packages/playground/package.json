@@ -13,7 +13,7 @@
     "#src/*": "./src/*"
   },
   "devDependencies": {
-    "@types/node": "^20.14.15",
+    "@types/node": "^22.4.1",
     "concurrently": "^8.2.2",
     "dev-utils": "workspace:*",
     "graphql": "^16.9.0",
