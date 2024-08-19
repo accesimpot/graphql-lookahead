@@ -29,7 +29,8 @@
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "types:check": "nx run-many -t types:check",
-    "test": "nx run-many -t test",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "dev-utils": "bash -c 'nx ${0} dev-utils $@'",
     "main": "bash -c 'nx ${0} main $@'",
     "playground": "bash -c 'nx ${0} playground $@'"
@@ -47,19 +48,24 @@
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.9.0",
+    "@graphql-tools/executor-http": "^1.1.5",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^10.1.5",
     "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^14.0.1",
     "@types/eslint__js": "^8.42.3",
+    "@vitest/coverage-istanbul": "^2.0.5",
     "concurrently": "^8.2.2",
     "eslint": "^9.9.0",
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.6.3",
     "nx": "19.6.0",
     "prettier": "^3.3.3",
     "semantic-release": "^24.0.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.1.0"
+    "typescript-eslint": "^8.1.0",
+    "vitest": "^2.0.5"
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"

@@ -37,7 +37,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - ⚡️ Performant - Avoid querying nested database relationships if they are not requested.
 - 🎯 Accurate - Check for the `field` or `type`  name. Check for a specific hierarchy of fields.
 - 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
-- 💪 Reliable - Fully covered by both unit and integration tests.
+- 💪 Reliable - Fully covered by integration tests.
 - 🏀 Accessible - Clone this repository and try it out locally using the playground.
 
 <br>

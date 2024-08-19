@@ -1,5 +1,6 @@
 import type { createSchema } from 'graphql-yoga'
-import { lookahead } from 'graphql-lookahead'
+// use relative import to use src files for test coverage
+import { lookahead } from '../../../graphql-lookahead/src/index.js'
 import { mockFullCart, mockPage } from '../mockData'
 
 type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>

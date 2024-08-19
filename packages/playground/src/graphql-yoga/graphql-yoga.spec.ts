@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import type { ExecutionResult } from 'graphql'
 import { createSchema, createYoga } from 'graphql-yoga'
 import { buildHTTPExecutor } from '@graphql-tools/executor-http'
