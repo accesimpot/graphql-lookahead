@@ -4,7 +4,7 @@
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm build --watch\" \"nodemon --delay 100ms --inspect --watch ./src/schema.gql ./dist/graphql-yoga --watch ../graphql-lookahead/dist -e js dist/graphql-yoga\"",
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm build --watch --emptyOutDir=false\" \"nodemon --delay 100ms --inspect --watch ./src/schema.gql --watch ./dist --watch ../graphql-lookahead/dist -e js dist/graphql-yoga\"",
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "start": "pnpm start:graphql-yoga",
     "start:graphql-yoga": "node dist/graphql-yoga",
