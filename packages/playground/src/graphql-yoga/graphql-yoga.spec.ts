@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest'
 import type { ExecutionResult } from 'graphql'
 import { createSchema, createYoga } from 'graphql-yoga'
 import { buildHTTPExecutor } from '@graphql-tools/executor-http'
@@ -17,13 +18,91 @@ describe('graphql-yoga', () => {
     return (await executor(opts)) as ExecutionResult<any, { meta?: Record<string, any> }>
   }
 
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
   describe('when it sends full cart query', async () => {
+    consoleErrorSpy.mockClear()
     const result = await execute({
       document: getFixtureQuery('graphql-yoga/queries/full-cart.gql'),
     })
 
     it('returns full cart data', () => {
       expect(result.data).toEqual({ order: mockFullCart })
+    })
+
+    it('has "hasQuantityFieldDepthOne" set to false in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.hasQuantityFieldDepthOne).toBe(
+        false
+      )
+    })
+
+    it('has "hasQuantityFieldDepthTwo" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.hasQuantityFieldDepthTwo).toBe(
+        true
+      )
+    })
+
+    it('has "invalidNext" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidNext).toBe(true)
+    })
+
+    it('logs the runtime error instead of throwing', () => {
+      expect(/[graphql-lookahead]/.test(consoleErrorSpy.mock.calls[0][0])).toBe(true)
+      expect(consoleErrorSpy.mock.calls[0][1] instanceof Error).toBe(true)
+      expect(/options.next is not a function/.test(consoleErrorSpy.mock.calls[0][1].message)).toBe(
+        true
+      )
+    })
+
+    it('has "invalidNextAndOnErrorReturningFalse" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidNextAndOnErrorReturningFalse
+      ).toBe(false)
+    })
+
+    it('has "invalidNextAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidNextAndOnErrorReturningUndefined
+      ).toBe(true)
+    })
+
+    it('has "invalidInfoNextAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue
+          .invalidInfoNextAndOnErrorReturningUndefined
+      ).toBe(true)
+    })
+
+    it('has "invalidInfoWithoutOnError" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidInfoWithoutOnError).toBe(
+        true
+      )
+    })
+
+    it('has "invalidInfoAndOnErrorReturningFalse" set to false in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidInfoAndOnErrorReturningFalse
+      ).toBe(false)
+    })
+
+    it('has "invalidInfoAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidInfoAndOnErrorReturningUndefined
+      ).toBe(true)
+    })
+
+    it('has "invalidInfoReturnType" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidInfoReturnType).toBe(true)
+    })
+
+    it('has "invalidSelectionName" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidSelectionName).toBe(true)
+    })
+
+    it('has "noSelectionSetMatchingInfoPath" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.noSelectionSetMatchingInfoPath
+      ).toBe(true)
     })
 
     it('has fully nested query filters in meta data', () => {
@@ -79,6 +158,36 @@ describe('graphql-yoga', () => {
         expect(
           result.extensions?.meta?.['ProductPageContent.products'].sequelizeQueryFilters
         ).toEqual({ include: [{ model: 'Inventory' }] })
+      })
+
+      describe('when looking at first call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to false', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][0].hasIdField).toBe(false)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][0].hasStockField).toBe(true)
+        })
+      })
+
+      describe('when looking at second call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][1].hasIdField).toBe(true)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][1].hasStockField).toBe(true)
+        })
+      })
+
+      describe('when looking at third call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][2].hasIdField).toBe(true)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][2].hasStockField).toBe(true)
+        })
       })
     })
   })

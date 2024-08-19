@@ -31,7 +31,15 @@ query cart {
 
       ... on ProductPageContent {
         products {
-          ...ProductFragment
+          __typename
+          id
+          color
+          size
+          inventory {
+            __typename
+            id
+            stock
+          }
         }
       }
     }

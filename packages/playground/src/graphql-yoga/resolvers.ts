@@ -1,5 +1,7 @@
 import type { createSchema } from 'graphql-yoga'
-import { lookahead } from 'graphql-lookahead'
+// use relative import to use src files for test coverage
+import { lookahead } from '../../../graphql-lookahead/src'
+import { callInvalidLookaheads } from './testUtils'
 import { mockFullCart, mockPage } from '../mockData'
 
 type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
@@ -12,6 +14,16 @@ interface QueryFilter {
 export const resolvers: Resolver = {
   Query: {
     order: (_parent, _args, context, info) => {
+      const hasQuantityFieldDepthOne = lookahead({
+        info,
+        until: ({ field }) => field === 'quantity',
+        depth: 1,
+      })
+      const hasQuantityFieldDepthTwo = lookahead({
+        info,
+        until: ({ field }) => field === 'quantity',
+        depth: 2,
+      })
       const sequelizeQueryFilters: QueryFilter = {}
 
       lookahead({
@@ -31,7 +43,14 @@ export const resolvers: Resolver = {
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
-        'Query.order': { sequelizeQueryFilters },
+        'Query.order': {
+          returnValue: {
+            hasQuantityFieldDepthOne,
+            hasQuantityFieldDepthTwo,
+            ...callInvalidLookaheads(info),
+          },
+          sequelizeQueryFilters,
+        },
       }
 
       return mockFullCart
@@ -71,6 +90,20 @@ export const resolvers: Resolver = {
       }
 
       return mockPage.content.products
+    },
+  },
+
+  Product: {
+    inventory: (parent, _args, context, info) => {
+      const hasIdField = lookahead({ info, until: ({ type }) => type === 'ID' })
+      const hasStockField = lookahead({ info, until: ({ field }) => field === 'stock' })
+
+      context.request.metaData = context.request.metaData || {}
+      context.request.metaData['Product.inventory'] =
+        context.request.metaData['Product.inventory'] || []
+      context.request.metaData['Product.inventory'].push({ hasIdField, hasStockField })
+
+      return parent.inventory
     },
   },
 }
