@@ -15,7 +15,7 @@ export const mockFullCart = {
         size: 'M',
         inventory: {
           __typename: 'Inventory',
-          stock: 5,
+          stock: 134,
         },
       },
 
@@ -43,7 +43,8 @@ export const mockPage = {
         color: 'blue',
         inventory: {
           __typename: 'Inventory',
-          stock: 5,
+          id: '4242',
+          stock: 15,
         },
         size: 'M',
       },
@@ -53,7 +54,8 @@ export const mockPage = {
         color: 'blue',
         inventory: {
           __typename: 'Inventory',
-          stock: 5,
+          id: '4343',
+          stock: 4,
         },
         size: 'M',
       },

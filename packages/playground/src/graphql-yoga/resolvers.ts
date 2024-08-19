@@ -97,6 +97,16 @@ export const resolvers: Resolver = {
     },
   },
 
+  Product: {
+    inventory: (parent, _args, context, info) => {
+      const hasIdField = lookahead({ info, until: ({ type }) => type === 'ID' })
+      const hasStockField = lookahead({ info, until: ({ field }) => field === 'stock' })
+
+      context.request.metaData = context.request.metaData || {}
+      context.request.metaData['Product.inventory'] =
+        context.request.metaData['Product.inventory'] || []
+      context.request.metaData['Product.inventory'].push({ hasIdField, hasStockField })
+
       return parent.inventory
     },
   },

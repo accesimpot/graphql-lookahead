@@ -12,6 +12,7 @@ type Order {
 }
 
 type Inventory {
+  id: ID!
   stock: Int!
 }
 

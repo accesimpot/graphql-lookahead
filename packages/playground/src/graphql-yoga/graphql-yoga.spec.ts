@@ -108,6 +108,36 @@ describe('graphql-yoga', () => {
           result.extensions?.meta?.['ProductPageContent.products'].sequelizeQueryFilters
         ).toEqual({ include: [{ model: 'Inventory' }] })
       })
+
+      describe('when looking at first call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to false', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][0].hasIdField).toBe(false)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][0].hasStockField).toBe(true)
+        })
+      })
+
+      describe('when looking at second call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][1].hasIdField).toBe(true)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][1].hasStockField).toBe(true)
+        })
+      })
+
+      describe('when looking at third call of `Product.inventory` in meta data', () => {
+        it('has "hasIdField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][2].hasIdField).toBe(true)
+        })
+
+        it('has "hasStockField" set to true', () => {
+          expect(result.extensions?.meta?.['Product.inventory'][2].hasStockField).toBe(true)
+        })
+      })
     })
   })
 })
