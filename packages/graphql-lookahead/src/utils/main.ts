@@ -69,7 +69,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   const state = options.state as TState
 
   const returnTypeName = findTypeName(info.returnType)
-  if (!returnTypeName) return false
+  if (!returnTypeName) return true
 
   const selectionSet = findSelectionSetForInfoPath(info)
 
@@ -85,7 +85,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
       until: options.until,
     })
   }
-  return false
+  return true
 }
 
 /**

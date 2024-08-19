@@ -1,6 +1,7 @@
 import type { createSchema } from 'graphql-yoga'
 // use relative import to use src files for test coverage
-import { lookahead } from '../../../graphql-lookahead/src/index.js'
+import { lookahead } from '../../../graphql-lookahead/src'
+import { callInvalidLookaheads } from './testUtils'
 import { mockFullCart, mockPage } from '../mockData'
 
 type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
@@ -39,55 +40,15 @@ export const resolvers: Resolver = {
         },
       })
 
-      // @ts-expect-error test invalid `next` option
-      const invalidNext = lookahead({ info, next: 5 }) // returns true
-
-      const invalidNextAndOnErrorReturningFalse = lookahead({
-        info,
-        // @ts-expect-error test invalid `next` option and `onError` returning false
-        next: 'foo',
-        onError: () => false,
-      }) // returns false
-
-      const invalidInfoNextAndOnErrorReturningUndefined = lookahead({
-        // @ts-expect-error test invalid `info`
-        info: undefined,
-        // @ts-expect-error test invalid `next` and `onError` options
-        next: 'foo',
-        onError: () => undefined,
-      }) // returns true
-
-      const invalidInfoWithoutOnError = lookahead({
-        // @ts-expect-error test invalid `info`
-        info: undefined,
-        until: ({ field }) => field === 'total',
-      }) // returns true
-
-      const noSelectionSetMatchingInfoPath = lookahead({
-        info: {
-          ...info,
-          operation: {
-            ...info.operation,
-            selectionSet: {
-              ...info.operation.selectionSet,
-              selections: [],
-            },
-          },
-        },
-        until: ({ field }) => field === 'total',
-      }) // returns false
-
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
         'Query.order': {
-          hasQuantityFieldDepthOne,
-          hasQuantityFieldDepthTwo,
-          invalidNext,
-          invalidNextAndOnErrorReturningFalse,
-          invalidInfoNextAndOnErrorReturningUndefined,
-          invalidInfoWithoutOnError,
-          noSelectionSetMatchingInfoPath,
+          returnValue: {
+            hasQuantityFieldDepthOne,
+            hasQuantityFieldDepthTwo,
+            ...callInvalidLookaheads(info),
+          },
           sequelizeQueryFilters,
         },
       }

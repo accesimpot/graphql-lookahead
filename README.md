@@ -37,7 +37,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - ⚡️ Performant - Avoid querying nested database relationships if they are not requested.
 - 🎯 Accurate - Check for the `field` or `type`  name. Check for a specific hierarchy of fields.
 - 🧘 Flexible - Works with any ORM, query builder, GraphQL servers.
-- 💪 Reliable - Fully covered by integration tests.
+- 💪 Reliable - Covered by integration tests.
 - 🏀 Accessible - Clone this repository and try it out locally using the playground.
 
 <br>
@@ -115,7 +115,7 @@ type HandlerDetails<TState> = {
 | `depth` | ❔ _Optional_ - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). |
 | `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
 | `next` | ❔ _Optional_ - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
-| `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`. |
+| `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
 | `state` | ❔ _Optional_ - Initial state used in `next` handler. See [Advanced usage](#advanced-usage).|
 | `until` | ❔ _Optional_ - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well. |
 

@@ -31,15 +31,19 @@ describe('graphql-yoga', () => {
     })
 
     it('has "hasQuantityFieldDepthOne" set to false in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].hasQuantityFieldDepthOne).toBe(false)
+      expect(result.extensions?.meta?.['Query.order'].returnValue.hasQuantityFieldDepthOne).toBe(
+        false
+      )
     })
 
     it('has "hasQuantityFieldDepthTwo" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].hasQuantityFieldDepthTwo).toBe(true)
+      expect(result.extensions?.meta?.['Query.order'].returnValue.hasQuantityFieldDepthTwo).toBe(
+        true
+      )
     })
 
     it('has "invalidNext" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].invalidNext).toBe(true)
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidNext).toBe(true)
     })
 
     it('logs the runtime error instead of throwing', () => {
@@ -51,23 +55,54 @@ describe('graphql-yoga', () => {
     })
 
     it('has "invalidNextAndOnErrorReturningFalse" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].invalidNextAndOnErrorReturningFalse).toBe(
-        false
-      )
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidNextAndOnErrorReturningFalse
+      ).toBe(false)
+    })
+
+    it('has "invalidNextAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidNextAndOnErrorReturningUndefined
+      ).toBe(true)
     })
 
     it('has "invalidInfoNextAndOnErrorReturningUndefined" set to true in meta data', () => {
       expect(
-        result.extensions?.meta?.['Query.order'].invalidInfoNextAndOnErrorReturningUndefined
+        result.extensions?.meta?.['Query.order'].returnValue
+          .invalidInfoNextAndOnErrorReturningUndefined
       ).toBe(true)
     })
 
     it('has "invalidInfoWithoutOnError" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].invalidInfoWithoutOnError).toBe(true)
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidInfoWithoutOnError).toBe(
+        true
+      )
+    })
+
+    it('has "invalidInfoAndOnErrorReturningFalse" set to false in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidInfoAndOnErrorReturningFalse
+      ).toBe(false)
+    })
+
+    it('has "invalidInfoAndOnErrorReturningUndefined" set to true in meta data', () => {
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.invalidInfoAndOnErrorReturningUndefined
+      ).toBe(true)
+    })
+
+    it('has "invalidInfoReturnType" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidInfoReturnType).toBe(true)
+    })
+
+    it('has "invalidSelectionName" set to true in meta data', () => {
+      expect(result.extensions?.meta?.['Query.order'].returnValue.invalidSelectionName).toBe(true)
     })
 
     it('has "noSelectionSetMatchingInfoPath" set to true in meta data', () => {
-      expect(result.extensions?.meta?.['Query.order'].noSelectionSetMatchingInfoPath).toBe(false)
+      expect(
+        result.extensions?.meta?.['Query.order'].returnValue.noSelectionSetMatchingInfoPath
+      ).toBe(true)
     })
 
     it('has fully nested query filters in meta data', () => {
