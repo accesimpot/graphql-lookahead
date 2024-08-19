@@ -6,8 +6,8 @@ updates:
       interval: daily
       time: '04:00'
     commit-message:
-      prefix: chore
-      include: scope
+      prefix: fix
+      prefix-development: chore
     reviewers:
       - pmrotule
 
@@ -17,7 +17,7 @@ updates:
       interval: 'daily'
       time: '04:00'
     commit-message:
-      prefix: chore
-      include: scope
+      prefix: fix
+      prefix-development: chore
     reviewers:
       - pmrotule
