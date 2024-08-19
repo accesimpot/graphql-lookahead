@@ -16,3 +16,4 @@ jobs:
           scopes: |
             deps
             deps-dev
+            README

@@ -91,9 +91,11 @@ export const resolvers: Resolver = {
 ```ts
 import type { GraphQLResolveInfo, SelectionSetNode } from 'graphql'
 
-function lookahead<TState>(options: {
+function lookahead<TState, RError extends boolean | undefined>(options: {
+  depth?: number | null
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
+  onError?: (err: unknown) => RError
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean
@@ -112,7 +114,7 @@ type HandlerDetails<TState> = {
 
 | Name | Description |
 | ------ | :---------- |
-| `depth` | ❔ _Optional_ - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). |
+| `depth` | ❔ _Optional_ - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`. |
 | `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
 | `next` | ❔ _Optional_ - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
 | `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
@@ -231,6 +233,9 @@ Visit the playground at http://localhost:4455/graphql 🚀
 
   # Run Vitest
   pnpm test
+
+  # Run Vitest in watch mode
+  pnpm test:watch
   ```
 </details>
 
