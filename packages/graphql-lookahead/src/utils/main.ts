@@ -6,6 +6,8 @@ import {
   findSelectionSetForInfoPath,
 } from './generic'
 
+const ERROR_PREFIX = 'ERROR [graphql-lookahead]: '
+
 type HandlerDetails<TState> = {
   field: string
   selection: SelectionNode
@@ -20,12 +22,32 @@ type HandlerDetails<TState> = {
  *
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState>(options: {
   info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
   next?: (details: HandlerDetails<TState>) => TState
+  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  state?: TState
+  until?: (details: HandlerDetails<TState>) => boolean
+}): boolean {
+  try {
+    return lookaheadAndThrow(options)
+  } catch (err) {
+    // Log all errors instead of throwing since `lookahead` is only used for performance improvement
+    // which is not business critical. If you need it to throw on error, use `lookaheadAndThrow`
+    // directly.
+    options.onError ? options.onError(err) : console.error(ERROR_PREFIX, err)
+    return false
+  }
+}
+
+export function lookaheadAndThrow<TState>(options: {
+  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
+  next?: (details: HandlerDetails<TState>) => TState
+  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
   state?: TState
   until?: (details: HandlerDetails<TState>) => boolean
 }): boolean {
@@ -41,6 +63,7 @@ export function lookahead<TState>(options: {
     return lookDeeper({
       info,
       next: options.next,
+      onError: options.onError,
       selectionSet,
       state,
       type: returnTypeName,
@@ -51,15 +74,37 @@ export function lookahead<TState>(options: {
 }
 
 /**
- * Iterate over every nested field of the provided `selectionSet` (picked from `info.operation`). You can stop the iteration using the `until` option.
+ * Iterate over every nested field of the provided `selectionSet` (picked from `info.operation`).
+ * You can stop the iteration using the `until` option.
  *
  * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err) }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookDeeper<TState>(options: {
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  next?: (details: HandlerDetails<TState>) => TState
+  onError?: (err: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  selectionSet: SelectionSetNode
+  state: TState
+  type: string
+  until?: (details: HandlerDetails<TState>) => boolean
+}): boolean {
+  try {
+    return lookDeeperAndThrow(options)
+  } catch (err) {
+    // Log all errors instead of throwing since `lookDeeper` is only used for performance improvement
+    // which is not business critical. If you need it to throw on error, use `lookDeeperAndThrow`
+    // directly.
+    options.onError ? options.onError(err) : console.error(ERROR_PREFIX, err)
+    return false
+  }
+}
+
+export function lookDeeperAndThrow<TState>(options: {
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   next?: (details: HandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
