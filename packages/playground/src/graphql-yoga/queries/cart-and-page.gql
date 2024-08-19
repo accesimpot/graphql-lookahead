@@ -1,0 +1,58 @@
+query cart {
+  order {
+    __typename
+    status
+
+    items {
+      __typename
+      price
+      quantity
+
+      product {
+        ...ProductFragment
+      }
+
+      group: productGroup {
+        __typename
+        name
+        categories
+      }
+    }
+    tax
+    subtotal
+    total
+  }
+
+  page {
+    __typename
+
+    content {
+      __typename
+
+      ... on ProductPageContent {
+        products {
+          __typename
+          id
+          color
+          size
+          inventory {
+            __typename
+            id
+            stock
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment ProductFragment on Product {
+  __typename
+  id
+  color
+  size
+  inventory {
+    __typename
+    stock
+  }
+}

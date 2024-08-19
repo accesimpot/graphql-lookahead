@@ -1,39 +1,101 @@
 {
   "name": "graphql-lookahead",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.6",
   "description": "GraphQL Lookahead in Typescript to check if some fields are present in the operation",
   "repository": "pmrotule/graphql-lookahead",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "graphql",
+    "lookahead",
+    "graphql lookahead",
+    "resolve info",
+    "query",
+    "performance"
+  ],
   "engines": {
-    "node": "20.16.0"
+    "node": "^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0"
   },
   "scripts": {
-    "build": "pnpm -F=main build",
-    "lint": "pnpm run lint:all",
-    "lint:fix": "pnpm run lint:all:fix",
-    "lint:all": "pnpm run lint:base .",
-    "lint:all:fix": "pnpm run lint:all --fix",
-    "lint:affected": "pnpm run lint:base $(git diff --name-only --diff-filter=d origin/main | grep -E \"\\.[mc]?[jt]s$\" | xargs)",
-    "lint:affected:fix": "pnpm run lint:affected --fix",
+    "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm main dev\" \"pnpm playground dev\"",
+    "build": "nx run-many -t build",
+    "lint": "pnpm lint:all",
+    "lint:fix": "pnpm lint:all:fix",
+    "lint:all": "pnpm lint:base .",
+    "lint:all:fix": "pnpm lint:all --fix",
+    "lint:affected": "pnpm lint:base $(git diff --name-only --diff-filter=d origin/main | grep -E \"\\.[mc]?[jt]s$\" | xargs)",
+    "lint:affected:fix": "pnpm lint:affected --fix",
     "lint:base": "eslint --cache",
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
-    "test": "pnpm run -r test"
+    "types:check": "nx run-many -t types:check",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "dev-utils": "bash -c 'nx ${0} dev-utils $@'",
+    "main": "bash -c 'nx ${0} main $@'",
+    "playground": "bash -c 'nx ${0} playground $@'"
   },
   "exports": {
-    ".": "./dist/index.mjs"
+    ".": {
+      "import": "./packages/graphql-lookahead/dist/index.js",
+      "require": "./packages/graphql-lookahead/dist/index.cjs"
+    }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./packages/graphql-lookahead/dist/index.d.ts",
   "files": [
-    "dist"
+    "packages/graphql-lookahead/dist"
   ],
   "devDependencies": {
+    "@eslint/compat": "^1.1.1",
+    "@eslint/js": "^9.9.0",
+    "@graphql-tools/executor-http": "^1.1.5",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^10.1.5",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.1",
     "@types/eslint__js": "^8.42.3",
-    "@eslint/js": "^9.8.0",
-    "eslint": "^9.8.0",
+    "@types/lodash.clonedeep": "^4.5.9",
+    "@vitest/coverage-istanbul": "^2.0.5",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.9.0",
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.6.3",
+    "lodash.clonedeep": "^4.5.0",
+    "nx": "19.6.0",
     "prettier": "^3.3.3",
+    "semantic-release": "^24.0.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.1"
+    "typescript-eslint": "^8.1.0",
+    "vitest": "^2.0.5"
+  },
+  "bugs": {
+    "url": "https://github.com/accesimpot/graphql-lookahead/issues"
+  },
+  "homepage": "https://github.com/accesimpot/graphql-lookahead#readme",
+  "release": {
+    "branches": [
+      {
+        "name": "main"
+      },
+      {
+        "name": "beta",
+        "channel": "beta",
+        "prerelease": true
+      }
+    ],
+    "repositoryUrl": "https://github.com/accesimpot/graphql-lookahead.git",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "message": "chore(release): ${nextRelease.version} \n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
   }
 }

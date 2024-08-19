@@ -127,3 +127,7 @@ dist
 
 # OS
 .DS_Store
+
+# Nx
+.nx/cache
+.nx/workspace-data

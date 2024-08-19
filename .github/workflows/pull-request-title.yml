@@ -2,7 +2,7 @@ name: Validate PR title
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, edited]
 
 jobs:
   conventional-pr-title:
@@ -12,21 +12,3 @@ jobs:
       - uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
-  title-and-description:
-    if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout 🛎
-        uses: actions/checkout@v4
-
-      - name: Add preview & Jira links to PR description 📝
-        uses: onrunning/jira-pr-action@v2
-        with:
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          jira-account: acces-impot
-          ticket-regex: ^ACCI-\d+
-          exception-regex: ^(main$|dependabot\/|revert-\d+)
-          clean-title-regex: ^\s*ACCI\s+\d+\s*
-          # preview-link: https://web-${{ github.event.pull_request.number }}.acces-impot.com

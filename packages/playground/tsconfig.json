@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.json",
 
   "compilerOptions": {
-    "types": ["vitest/globals"],
     "paths": {
+      "graphql-lookahead": ["../graphql-lookahead"],
       "#src/*": ["./src/*"]
     },
     "noEmit": true

@@ -10,12 +10,21 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+
+    env:
+      NX_NO_CLOUD: ${{ secrets.NX_NO_CLOUD }}
+
     steps:
       - name: Checkout branch 🛎
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          persist-credentials: false
           fetch-depth: 0
+
+      # https://nx.dev/packages/nx/documents/affected
+      - name: Set SHAs for `nx affected` commands
+        id: setSHAs
+        uses: nrwl/nx-set-shas@v4
 
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
@@ -29,10 +38,43 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies 👨🏻‍💻
-        run: pnpm install
+        run: pnpm install --prod=false
 
+      - name: Any change affecting the main package❔
+        id: main-package-affected
+        # Make sure the job fails with exit code 1 if the nx command fails
+        run: |
+          projects=$(yarn --silent nx show projects --projects main --affected || echo 'error')
+          [ "$projects" == 'error' ] && exit 1
+
+          array=($projects)
+
+          echo "count=${#array[@]}" >> $GITHUB_OUTPUT
+
+      - name: Build main package 📦
+        if: steps.main-package-affected.outputs.count > 0
+        run: pnpm main build
+
+      # A release is made if the prefix is feat, fix or perf
+      #
+      # See https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-angular#type
+      #
+      # Available types:
+      #   - feat: A new feature
+      #   - fix: A bug fix
+      #   - docs: Documentation only changes
+      #   - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+      #   - refactor: A code change that neither fixes a bug nor adds a feature
+      #   - perf: A code change that improves performance
+      #   - test: Adding missing tests or correcting existing tests
+      #   - build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+      #   - ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+      #   - chore: Other changes that don't modify src or test files
+      #   - revert: Reverts a previous commit
+      #
       - name: Release
+        if: steps.main-package-affected.outputs.count > 0
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: pnpm semantic-release

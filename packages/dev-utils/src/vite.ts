@@ -2,23 +2,51 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { globSync } from 'glob'
 import { defineConfig } from 'vite'
+import type { PluginOption, LibraryFormats } from 'vite'
 import dts from 'vite-plugin-dts'
-import graphql from '@rollup/plugin-graphql'
 
 const SRC_DIR = 'src'
 const DIST_DIR = 'dist'
+
+enum PLUGIN_CATEGORIES {
+  dts = 'dts',
+}
 
 export function generateViteConfig(options: {
   absoluteRootDir: string
   srcDir?: string
   distDir?: string
+  pluginCategories?: `${PLUGIN_CATEGORIES}`[]
+  formats?: LibraryFormats[]
 }) {
-  const { absoluteRootDir, srcDir = SRC_DIR, distDir = DIST_DIR } = options
+  const {
+    absoluteRootDir,
+    srcDir = SRC_DIR,
+    distDir = DIST_DIR,
+    pluginCategories = [],
+    formats = ['es'],
+  } = options
 
   const absoluteSrcDir = path.resolve(absoluteRootDir, srcDir)
   const absoluteDistDir = path.resolve(absoluteRootDir, distDir)
 
   const tsconfigPath = path.resolve(absoluteRootDir, 'tsconfig.compiler.json')
+
+  const plugins: PluginOption[] = []
+
+  const pluginGetters = {
+    [`${PLUGIN_CATEGORIES.dts}`]: () =>
+      dts({
+        tsconfigPath,
+        outDir: absoluteDistDir,
+        copyDtsFiles: true,
+      }),
+  }
+
+  // Add plugins based on the "pluginCategories" option which is mapped to "pluginGetters"
+  pluginCategories.forEach(pluginCategory => {
+    plugins.push(pluginGetters[pluginCategory]())
+  })
 
   return defineConfig({
     root: absoluteRootDir,
@@ -30,14 +58,7 @@ export function generateViteConfig(options: {
       preventAssignment: true,
     },
 
-    plugins: [
-      dts({
-        tsconfigPath,
-        outDir: absoluteDistDir,
-        copyDtsFiles: true,
-      }),
-      graphql(),
-    ],
+    plugins,
 
     esbuild: {
       tsconfigRaw: fs.readFileSync(tsconfigPath, 'utf8'),
@@ -47,17 +68,13 @@ export function generateViteConfig(options: {
       outDir: absoluteDistDir,
       lib: {
         entry: getPreservedInputMapping(absoluteSrcDir),
-        formats: ['es'],
+        formats,
       },
       sourcemap: true,
       emptyOutDir: true,
       dynamicImportVarsOptions: { exclude: '**/*' },
 
       rollupOptions: {
-        output: {
-          dir: absoluteDistDir,
-          format: 'esm',
-        },
         external: [...getDependenciesFromPackageJson(absoluteRootDir), /^node:/],
       },
     },
@@ -88,7 +105,12 @@ function getDependenciesFromPackageJson(absoluteRootDir: string): string[] {
   const pkgJsonFilePath = path.join(absoluteRootDir, 'package.json')
   const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFilePath, 'utf-8')) as {
     dependencies: Record<string, string>
+    peerDependencies: Record<string, string>
     devDependencies: Record<string, string>
   }
-  return Object.keys({ ...pkgJson.dependencies, ...pkgJson.devDependencies })
+  return Object.keys({
+    ...pkgJson.dependencies,
+    ...pkgJson.peerDependencies,
+    ...pkgJson.devDependencies,
+  })
 }
