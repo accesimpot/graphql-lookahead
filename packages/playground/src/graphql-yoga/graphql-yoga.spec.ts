@@ -27,7 +27,7 @@ describe('graphql-yoga', () => {
     })
 
     it('returns full cart data', () => {
-      expect(result.data).toEqual({ order: mockFullCart })
+      expect(result.data).toEqual({ order: { ...mockFullCart, invalidField: null } })
     })
 
     it('has "hasQuantityFieldDepthOne" set to false in meta data', () => {

@@ -4,6 +4,8 @@ import cloneDeep from 'lodash.clonedeep'
 import { lookahead } from '../../../graphql-lookahead/src'
 
 export function callInvalidLookaheads(info: GraphQLResolveInfo) {
+  if (!lookahead({ info, until: ({ field }) => field === 'invalidField' })) return
+
   // @ts-expect-error test invalid `next` option
   const invalidNext = lookahead({ info, next: 5 }) // returns true
 
