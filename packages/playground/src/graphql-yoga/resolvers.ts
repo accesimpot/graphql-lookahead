@@ -1,7 +1,7 @@
 import type { createSchema } from 'graphql-yoga'
 // use relative import to use src files for test coverage
 import { lookahead } from '../../../graphql-lookahead/src'
-import { callInvalidLookaheads } from './testUtils'
+import { callInvalidOrderLookaheads } from './testUtils'
 import { mockFullCart, mockPage } from '../mockData'
 
 type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
@@ -47,7 +47,7 @@ export const resolvers: Resolver = {
           returnValue: {
             hasQuantityFieldDepthOne,
             hasQuantityFieldDepthTwo,
-            ...callInvalidLookaheads(info),
+            ...callInvalidOrderLookaheads(info),
           },
           sequelizeQueryFilters,
         },
