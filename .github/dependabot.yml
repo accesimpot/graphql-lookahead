@@ -2,22 +2,50 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: '/'
+
     schedule:
       interval: daily
       time: '04:00'
+
     commit-message:
-      prefix: fix
-      prefix-development: chore
+      prefix: chore
+      include: scope
+
+    ignore:
+      - dependency-name: '@types/node'
+        versions: ['>=20.15.0']
+
+      # Ignore any patch update of any dependency
+      # (security updates are not affected by this setting)
+      # See https://github.blog/changelog/2021-05-21-dependabot-version-updates-can-now-ignore-major-minor-patch-releases/
+      #
+      - dependency-name: '*'
+        update-types: ['version-update:semver-patch']
+
     reviewers:
       - pmrotule
 
   - package-ecosystem: 'github-actions'
     directory: '/'
+
     schedule:
       interval: 'daily'
       time: '04:00'
+
     commit-message:
-      prefix: fix
-      prefix-development: chore
+      prefix: chore
+      include: scope
+
+    ignore:
+      - dependency-name: '@types/node'
+        versions: ['>=20.15.0']
+
+      # Ignore any patch update of any dependency
+      # (security updates are not affected by this setting)
+      # See https://github.blog/changelog/2021-05-21-dependabot-version-updates-can-now-ignore-major-minor-patch-releases/
+      #
+      - dependency-name: '*'
+        update-types: ['version-update:semver-patch']
+
     reviewers:
       - pmrotule
