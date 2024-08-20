@@ -6,7 +6,7 @@ import {
   findSelectionSetForInfoPath,
 } from './generic'
 
-const ERROR_PREFIX = 'ERROR [graphql-lookahead]: '
+const ERROR_PREFIX = '[graphql-lookahead]'
 
 type HandlerDetails<TState> = {
   field: string
@@ -69,7 +69,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   const state = options.state as TState
 
   const returnTypeName = findTypeName(info.returnType)
-  if (!returnTypeName) return true
+  if (!returnTypeName) throw new Error('Invalid `info.returnType`.')
 
   const selectionSet = findSelectionSetForInfoPath(info)
 
@@ -85,7 +85,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
       until: options.until,
     })
   }
-  return true
+  throw new Error('No `selectionSet` found for the given `info.path`.')
 }
 
 /**
