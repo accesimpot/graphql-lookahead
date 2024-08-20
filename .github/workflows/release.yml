@@ -45,11 +45,12 @@ jobs:
         # Make sure the job fails with exit code 1 if the nx command fails
         run: |
           projects=$(pnpm --silent nx show projects --projects main --affected || echo 'error')
-          [ "$projects" == 'error' ] && exit 1
+          projects+=$(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} -- README.md || echo 'error')
 
-          array=($projects)
+          projects_array=($projects)
+          [[ ${projects_array[*]} =~ 'error' ]] && exit 1
 
-          echo "count=${#array[@]}" >> $GITHUB_OUTPUT
+          echo "count=${#projects_array[@]}" >> $GITHUB_OUTPUT
 
       - name: Build main package 📦
         if: steps.main-package-affected.outputs.count > 0
