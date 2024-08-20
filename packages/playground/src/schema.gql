@@ -9,6 +9,7 @@ type Order {
   tax: Int!
   subtotal: Int!
   total: Int!
+  invalidField: String
 }
 
 type Inventory {
