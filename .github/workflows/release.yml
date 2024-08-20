@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NX_NO_CLOUD: ${{ secrets.NX_NO_CLOUD }}
+      NX_NO_CLOUD: 'true'
 
     steps:
       - name: Checkout branch 🛎
