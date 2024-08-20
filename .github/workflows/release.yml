@@ -44,7 +44,7 @@ jobs:
         id: main-package-affected
         # Make sure the job fails with exit code 1 if the nx command fails
         run: |
-          projects=$(yarn --silent nx show projects --projects main --affected || echo 'error')
+          projects=$(pnpm --silent nx show projects --projects main --affected || echo 'error')
           [ "$projects" == 'error' ] && exit 1
 
           array=($projects)
