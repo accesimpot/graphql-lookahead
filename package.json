@@ -39,12 +39,24 @@
   },
   "exports": {
     ".": {
-      "import": "./packages/graphql-lookahead/dist/index.js",
-      "require": "./packages/graphql-lookahead/dist/index.cjs"
+      "import": {
+        "types": "./packages/graphql-lookahead/dist/index.d.ts",
+        "default": "./packages/graphql-lookahead/dist/index.js"
+      },
+      "require": {
+        "types": "./packages/graphql-lookahead/dist/index.d.ts",
+        "default": "./packages/graphql-lookahead/dist/index.cjs"
+      }
     },
     "./utils": {
-      "import": "./packages/graphql-lookahead/dist/utils/generic.js",
-      "require": "./packages/graphql-lookahead/dist/utils/generic.cjs"
+      "import": {
+        "types": "./packages/graphql-lookahead/dist/utils/generic.d.ts",
+        "default": "./packages/graphql-lookahead/dist/utils/generic.js"
+      },
+      "require": {
+        "types": "./packages/graphql-lookahead/dist/utils/generic.d.ts",
+        "default": "./packages/graphql-lookahead/dist/utils/generic.cjs"
+      }
     }
   },
   "types": "./packages/graphql-lookahead/dist/index.d.ts",
