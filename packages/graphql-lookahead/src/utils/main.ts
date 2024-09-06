@@ -10,6 +10,14 @@ type HandlerDetails<TState> = {
   type: string
 }
 
+type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
+  nextSelectionSet?: SelectionSetNode
+}
+
+type NextHandlerDetails<TState> = HandlerDetails<TState> & {
+  nextSelectionSet: SelectionSetNode
+}
+
 /**
  * Use `lookahead` to check within the resolver function if particular fields are part of the
  * operation (`info.operation`). This allows you to avoid querying nested database relationships
@@ -28,10 +36,10 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
     GraphQLResolveInfo,
     'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
   >
-  next?: (details: HandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
-  until?: (details: HandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean {
   try {
     return lookaheadAndThrow(options)
@@ -61,10 +69,10 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
     GraphQLResolveInfo,
     'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
   >
-  next?: (details: HandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
-  until?: (details: HandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean {
   const { info } = options
   const state = options.state as TState
@@ -109,12 +117,12 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
-  next?: (details: HandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until?: (details: HandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean {
   try {
     return lookDeeperAndThrow(options)
@@ -141,11 +149,11 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
 export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
-  next?: (details: HandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until?: (details: HandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean {
   const depth: number | null = typeof options.depth === 'number' ? options.depth : null
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
@@ -158,11 +166,11 @@ function lookDeeperWithDefaults<TState>(options: {
   depth: number | null
   depthIndex: number
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
-  next: (details: HandlerDetails<TState>) => TState
+  next: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until: (details: HandlerDetails<TState>) => boolean
+  until: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean | void {
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
@@ -188,9 +196,9 @@ function lookDeeperWithDefaults<TState>(options: {
       let lookDeeperState = options.state
 
       if (!isFragmentSelection) {
-        if (options.until(handlerArgs)) return true
+        if (options.until({ nextSelectionSet, ...handlerArgs })) return true
 
-        if (nextSelectionSet) lookDeeperState = options.next(handlerArgs)
+        if (nextSelectionSet) lookDeeperState = options.next({ nextSelectionSet, ...handlerArgs })
       }
 
       // Don't dig deeper if the loop has reached the provided `depth` value
