@@ -46,6 +46,7 @@ jobs:
         run: |
           projects=$(pnpm --silent nx show projects --projects main --affected || echo 'error')
           projects+=$(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} -- README.md || echo 'error')
+          projects+=$(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} -- package.json || echo 'error')
 
           projects_array=($projects)
           [[ ${projects_array[*]} =~ 'error' ]] && exit 1
