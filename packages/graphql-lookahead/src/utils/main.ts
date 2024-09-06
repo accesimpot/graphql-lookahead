@@ -1,10 +1,5 @@
 import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
-import {
-  getSelectionDetails,
-  findTypeName,
-  findSelectionName,
-  findSelectionSetForInfoPath,
-} from './generic'
+import { getSelectionDetails, findTypeName, findSelectionName } from './generic'
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
@@ -29,7 +24,10 @@ type HandlerDetails<TState> = {
  */
 export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
+  info: Pick<
+    GraphQLResolveInfo,
+    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+  >
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
@@ -59,7 +57,10 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
 
 export function lookaheadAndThrow<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
+  info: Pick<
+    GraphQLResolveInfo,
+    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+  >
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
@@ -71,7 +72,9 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   const returnTypeName = findTypeName(info.returnType)
   if (!returnTypeName) throw new Error('Invalid `info.returnType`.')
 
-  const selectionSet = findSelectionSetForInfoPath(info)
+  const selectionSet = info.fieldNodes.find(
+    node => node.name.value === info.fieldName
+  )?.selectionSet
 
   if (selectionSet) {
     return lookDeeper({
@@ -85,7 +88,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
       until: options.until,
     })
   }
-  throw new Error('No `selectionSet` found for the given `info.path`.')
+  throw new Error('No `selectionSet` found in `info.fieldNodes`.')
 }
 
 /**

@@ -1,83 +1,5 @@
 import type { GraphQLType, GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
 
-/**
- * Given the info.path representing the location in the operation from where the resolver was
- * triggered, the function finds the selectionSet that matches that path.
- */
-export function findSelectionSetForInfoPath(
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'path'> & {
-    operation: Pick<GraphQLResolveInfo['operation'], 'selectionSet'>
-  }
-) {
-  return findSelectionSetForPathArray({
-    info,
-    paths: pathToArray(info.path),
-    pathIndex: 0,
-    selectionSet: info.operation.selectionSet,
-  })
-}
-
-function findSelectionSetForPathArray(options: {
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
-  paths: ReturnType<typeof pathToArray>
-  pathIndex: number
-  selectionSet: SelectionSetNode
-}) {
-  const currentSelectionPath: (typeof options.paths)[0] = options.paths[options.pathIndex]
-  if (!currentSelectionPath) return
-
-  const selectionSet = options.selectionSet
-
-  let selectionMatch: (typeof selectionSet.selections)[0] | undefined
-  let nextSelectionSetMatch: SelectionSetNode | undefined
-  let nextPathIndexAddition = 1
-
-  const findByName = (select: SelectionNode) => {
-    if ('name' in select && select.name.value === currentSelectionPath.key) return select
-  }
-
-  for (const selection of selectionSet.selections) {
-    const selectionName = findSelectionName(selection)
-
-    // This should only happen if the selection is invalid
-    if (!selectionName) continue
-
-    const { isFragmentSelection, nextSelectionSet, selectionTypeName } = getSelectionDetails({
-      info: options.info,
-      selection,
-      selectionName,
-      type: currentSelectionPath.typename,
-    })
-
-    if (isFragmentSelection && selectionTypeName === currentSelectionPath.typename) {
-      nextPathIndexAddition = 0
-
-      if (nextSelectionSet && selection.kind === 'FragmentSpread') {
-        selectionMatch = nextSelectionSet.selections.find(findByName)
-      }
-      if (selection.kind === 'InlineFragment') selectionMatch = selection
-    }
-    if (!isFragmentSelection) selectionMatch = findByName(selection)
-
-    if (selectionMatch) {
-      if (nextSelectionSet) nextSelectionSetMatch = nextSelectionSet
-      break
-    }
-  }
-
-  if (!nextSelectionSetMatch) return
-
-  const nextPathIndex = options.pathIndex + nextPathIndexAddition
-  if (nextPathIndex === options.paths.length) return nextSelectionSetMatch
-
-  return findSelectionSetForPathArray({
-    info: options.info,
-    paths: options.paths,
-    pathIndex: options.pathIndex + nextPathIndexAddition,
-    selectionSet: nextSelectionSetMatch,
-  })
-}
-
 export function getSelectionDetails(options: {
   info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
   selection: SelectionNode
@@ -112,28 +34,6 @@ export function getSelectionDetails(options: {
     }
   }
   return { isFragmentSelection, nextSelectionSet, selectionTypeName }
-}
-
-/**
- * Given a Path (taken from the resolver argument info.path), it returns an array of the path
- * object in the right order (from the query field to the most nested field).
- *
- * Inspired by `pathToArray` from 'graphql', but instead of returning only an array of key string,
- * it returns the object including both the "key" and the "typename". It also filters out the paths
- * with a key of type number (only relevant for retrieving the path in the data, not in the
- * operation selection).
- *
- * @see https://github.com/graphql/graphql-js/blob/9a91e338101b94fb1cc5669dd00e1ba15e0f21b3/src/jsutils/Path.ts#L23
- */
-export function pathToArray(path: GraphQLResolveInfo['path'] | undefined) {
-  const flattened = []
-  let prev = path
-
-  while (prev) {
-    if (typeof prev.key === 'string') flattened.push({ key: prev.key, typename: prev.typename })
-    prev = prev.prev
-  }
-  return flattened.reverse()
 }
 
 /**

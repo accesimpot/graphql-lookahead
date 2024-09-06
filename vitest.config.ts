@@ -11,8 +11,8 @@ export default defineConfig({
       include: ['packages/graphql-lookahead/src/**'],
 
       thresholds: {
-        statements: 94,
-        branches: 84,
+        statements: 95,
+        branches: 88,
         functions: 100,
         lines: 100,
       },
