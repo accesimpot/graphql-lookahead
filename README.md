@@ -97,10 +97,10 @@ function lookahead<TState, RError extends boolean | undefined>(options: {
     GraphQLResolveInfo,
     'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
   >
-  next?: (details: HandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
-  until?: (details: HandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean
 
 type HandlerDetails<TState> = {
@@ -108,6 +108,14 @@ type HandlerDetails<TState> = {
   selection: SelectionNode
   state: TState
   type: string
+}
+
+type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
+  nextSelectionSet?: SelectionSetNode
+}
+
+type NextHandlerDetails<TState> = HandlerDetails<TState> & {
+  nextSelectionSet: SelectionSetNode
 }
 ```
 
