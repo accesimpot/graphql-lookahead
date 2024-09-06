@@ -31,14 +31,16 @@ query cart {
 
       ... on ProductPageContent {
         products {
-          __typename
-          id
-          color
-          size
-          inventory {
+          ... on Product {
             __typename
             id
-            stock
+            color
+            size
+            inventory {
+              __typename
+              id
+              stock
+            }
           }
         }
       }

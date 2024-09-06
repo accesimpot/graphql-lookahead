@@ -38,8 +38,8 @@ export function callInvalidOrderLookaheads(info: GraphQLResolveInfo) {
   }) // returns true
 
   const invalidInfoAndOnErrorReturningFalse = lookahead({
-    // @ts-expect-error test invalid `info`
-    info: undefined,
+    // @ts-expect-error invalid `info` throwing when no `selectionSet` is found in `info.fieldNodes`
+    info: { returnType: info.returnType, fieldNodes: [] },
     onError: () => false,
     until: ({ field }) => field === 'total',
   }) // returns false

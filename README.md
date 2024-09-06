@@ -93,7 +93,10 @@ import type { GraphQLResolveInfo, SelectionNode } from 'graphql'
 
 function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'operation' | 'schema' | 'fragments' | 'returnType' | 'path'>
+  info: Pick<
+    GraphQLResolveInfo,
+    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+  >
   next?: (details: HandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
