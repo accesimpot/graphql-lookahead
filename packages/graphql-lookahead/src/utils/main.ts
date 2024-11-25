@@ -1,10 +1,11 @@
 import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
-import { getSelectionDetails, findTypeName, findSelectionName } from './generic'
+import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } from './generic'
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
 type HandlerDetails<TState> = {
   field: string
+  fieldDef: NonNullable<ReturnType<typeof getChildFields>>[string] | undefined
   selection: SelectionNode
   state: TState
   type: string
@@ -189,6 +190,10 @@ function lookDeeperWithDefaults<TState>(options: {
     if (selectionTypeName) {
       const handlerArgs: HandlerDetails<TState> = {
         field: selectionName,
+        get fieldDef() {
+          const siblingFields = getChildFields(options.info.schema, options.type)
+          return siblingFields?.[selectionName]
+        },
         selection,
         state: options.state,
         type: selectionTypeName,
@@ -196,9 +201,12 @@ function lookDeeperWithDefaults<TState>(options: {
       let lookDeeperState = options.state
 
       if (!isFragmentSelection) {
-        if (options.until({ nextSelectionSet, ...handlerArgs })) return true
+        // Using `Object.assign` instead of object spread operator to prevent executing `fieldDef`
+        // if not requested (only run it on demand).
+        if (options.until(Object.assign(handlerArgs, { nextSelectionSet }))) return true
 
-        if (nextSelectionSet) lookDeeperState = options.next({ nextSelectionSet, ...handlerArgs })
+        if (nextSelectionSet)
+          lookDeeperState = options.next(Object.assign(handlerArgs, { nextSelectionSet }))
       }
 
       // Don't dig deeper if the loop has reached the provided `depth` value
