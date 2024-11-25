@@ -43,7 +43,7 @@ jobs:
 
   release:
     name: Release
-    if: needs.should-proceed.outputs.rebasing-beta != 'true'
+    if: needs.should-proceed.outputs.rebasing-beta == 'false'
     needs: [should-proceed]
     runs-on: ubuntu-latest
 
