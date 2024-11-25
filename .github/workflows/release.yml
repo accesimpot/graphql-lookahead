@@ -7,8 +7,44 @@ on:
       - beta
 
 jobs:
+  should-proceed:
+    name: Proceed with the release?
+    runs-on: ubuntu-latest
+
+    outputs:
+      rebasing-beta: ${{ steps.rebasing-beta.outputs.rebasing }}
+
+    steps:
+      - name: Checkout branch 🛎
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Is rebasing beta?
+        id: rebasing-beta
+        run: |
+          github_ref="${{ github.ref }}"
+
+          if [[ $github_ref != 'refs/heads/beta' ]]; then
+            echo "rebasing=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          changes=$(git diff HEAD..main --name-only)
+
+          if [[ $? != 0 ]]; then
+            echo "rebasing=error" >> $GITHUB_OUTPUT
+          elif [[ $changes ]]; then
+            echo "rebasing=true" >> $GITHUB_OUTPUT
+          else
+            echo "rebasing=false" >> $GITHUB_OUTPUT
+          fi
+
   release:
     name: Release
+    if: needs.should-proceed.outputs.rebasing-beta != 'true'
+    needs: [should-proceed]
     runs-on: ubuntu-latest
 
     env:
