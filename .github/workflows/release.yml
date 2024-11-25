@@ -31,7 +31,7 @@ jobs:
             exit 0
           fi
 
-          changes=$(git diff HEAD..main --name-only)
+          changes=$(git diff HEAD..origin/main --name-only)
 
           if [[ $? != 0 ]]; then
             echo "rebasing=error" >> $GITHUB_OUTPUT
