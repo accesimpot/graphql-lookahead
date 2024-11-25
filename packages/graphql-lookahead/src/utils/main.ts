@@ -235,8 +235,8 @@ function lookDeeperWithDefaults<TState>(options: {
           type: selectionTypeName,
         }
 
-        // Using `Object.assign` instead of object spread operator to prevent executing `fieldDef`
-        // if not requested (only run it on demand).
+        // Using `Object.assign` instead of object spread operator to prevent executing the
+        // getters if not requested (`fieldDef`, `args`).
         if (options.until(Object.assign(handlerArgs, { nextSelectionSet }))) return true
 
         if (nextSelectionSet)
