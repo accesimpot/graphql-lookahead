@@ -1,4 +1,4 @@
-query cart {
+query cart($color: String) {
   order {
     __typename
     status
@@ -30,7 +30,7 @@ query cart {
       __typename
 
       ... on ProductPageContent {
-        products {
+        products(where: { id: { eq: "123" }, color: { in: [$color] } }) {
           ... on Product {
             __typename
             id

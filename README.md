@@ -104,9 +104,10 @@ function lookahead<TState, RError extends boolean | undefined>(options: {
 }): boolean
 
 type HandlerDetails<TState> = {
+  args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField
-  selection: SelectionNode
+  selection: FieldNode
   state: TState
   type: string
 }

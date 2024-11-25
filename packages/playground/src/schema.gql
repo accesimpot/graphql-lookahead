@@ -48,5 +48,17 @@ type HomepageContent {
 
 type ProductPageContent {
   title: String
-  products: [Product!]
+  products(where: ProductPageContentWhereInput): [Product!]
+}
+
+input ProductPageContentWhereInput {
+  id: OperatorStringInput
+  color: OperatorStringInput
+}
+
+input OperatorStringInput {
+  eq: String
+  ne: String
+  in: [String]
+  notIn: [String]
 }

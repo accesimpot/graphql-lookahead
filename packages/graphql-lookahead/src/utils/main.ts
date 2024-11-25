@@ -1,18 +1,22 @@
-import type {
-  GraphQLResolveInfo,
-  SelectionSetNode,
-  SelectionNode,
-  GraphQLInputField,
-  GraphQLField,
+import {
+  type GraphQLResolveInfo,
+  type SelectionSetNode,
+  type FieldNode,
+  type GraphQLInputField,
+  type GraphQLField,
+  type FragmentSpreadNode,
+  type InlineFragmentNode,
+  getArgumentValues,
 } from 'graphql'
 import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } from './generic'
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
 type HandlerDetails<TState> = {
+  args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
-  selection: SelectionNode
+  selection: FieldNode
   state: TState
   type: string
 }
@@ -41,7 +45,13 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<
     GraphQLResolveInfo,
-    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+    | 'operation'
+    | 'schema'
+    | 'fragments'
+    | 'returnType'
+    | 'fieldNodes'
+    | 'fieldName'
+    | 'variableValues'
   >
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
@@ -74,7 +84,13 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   depth?: number | null
   info: Pick<
     GraphQLResolveInfo,
-    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+    | 'operation'
+    | 'schema'
+    | 'fragments'
+    | 'returnType'
+    | 'fieldNodes'
+    | 'fieldName'
+    | 'variableValues'
   >
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
@@ -123,7 +139,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
@@ -155,7 +171,7 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
 
 export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next?: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -172,7 +188,7 @@ export function lookDeeperAndThrow<TState>(options: {
 function lookDeeperWithDefaults<TState>(options: {
   depth: number | null
   depthIndex: number
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -194,23 +210,31 @@ function lookDeeperWithDefaults<TState>(options: {
     })
 
     if (selectionTypeName) {
-      const handlerArgs: HandlerDetails<TState> = {
-        field: selectionName,
-
-        get fieldDef() {
-          const siblingFields = getChildFields(options.info.schema, options.type)
-          const fieldDef = siblingFields?.[selectionName]
-
-          // We know the field is present in the schema and we know it is not an input
-          return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
-        },
-        selection,
-        state: options.state,
-        type: selectionTypeName,
-      }
       let lookDeeperState = options.state
 
       if (!isFragmentSelection) {
+        const handlerArgs: HandlerDetails<TState> = {
+          field: selectionName,
+
+          get fieldDef() {
+            const siblingFields = getChildFields(options.info.schema, options.type)
+            const fieldDef = siblingFields?.[selectionName]
+
+            // We know the field is present in the schema and we know it is not an input
+            return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
+          },
+          get args() {
+            return getArgumentValues(this.fieldDef, this.selection, options.info.variableValues)
+          },
+          // We execute the handlers only if it is not a fragment selection
+          selection: selection as Exclude<
+            typeof selection,
+            FragmentSpreadNode | InlineFragmentNode
+          >,
+          state: options.state,
+          type: selectionTypeName,
+        }
+
         // Using `Object.assign` instead of object spread operator to prevent executing `fieldDef`
         // if not requested (only run it on demand).
         if (options.until(Object.assign(handlerArgs, { nextSelectionSet }))) return true

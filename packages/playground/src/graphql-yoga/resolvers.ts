@@ -8,6 +8,8 @@ type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
 
 interface QueryFilter {
   model?: string
+  association?: string
+  where?: object
   include?: (QueryFilter | string)[]
 }
 
@@ -56,13 +58,39 @@ export const resolvers: Resolver = {
       return mockFullCart
     },
 
-    page: () => ({
-      content: {
-        get __typename() {
-          return 'ProductPageContent'
+    page: async (_parent, _args, context, info) => {
+      const nestedFindOptions: QueryFilter = {}
+
+      lookahead({
+        info,
+        state: nestedFindOptions,
+
+        next({ state, args, field }) {
+          const nextState: QueryFilter = { association: field }
+
+          if (args.where && typeof args.where === 'object') nextState.where = args.where
+
+          state.include = state.include || []
+          state.include.push(nextState)
+
+          return nextState
         },
-      },
-    }),
+      })
+
+      // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
+      context.request.metaData = {
+        ...context.request.metaData,
+        'Query.page': { nestedFindOptions },
+      }
+
+      return {
+        content: {
+          get __typename() {
+            return 'ProductPageContent'
+          },
+        },
+      }
+    },
   },
 
   ProductPageContent: {

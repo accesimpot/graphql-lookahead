@@ -8,6 +8,33 @@ import { mockFullCart, mockPage } from '../mockData'
 import { getFixtureQuery } from '../utils/graphql'
 import { useMetaPlugin } from './plugins/useMetaPlugin'
 
+const mockProductsWhereArgs = {
+  id: { eq: '123' },
+  color: { in: ['blue'] as const },
+}
+
+vi.mock('graphql', async () => ({
+  ...(await vi.importActual('graphql')),
+
+  /**
+   * We must mock "getArgumentValues" utility from "graphql" module, otherwise it will throw the
+   * following error:
+   *
+   * ```
+   * Error: Cannot use GraphQLInputObjectType "ProductPageContentWhereInput" from another module
+   * or realm.
+   *
+   * Ensure that there is only one instance of "graphql" in the node_modules
+   * directory. [...]
+   * ```
+   *
+   * The same version is enforced by the "resolutions" option in package.json and works without
+   * error using the playground. It must be due to Vitest using workers.
+   */
+  getArgumentValues: (fieldDef: { name: string }) =>
+    fieldDef.name === 'products' ? { where: mockProductsWhereArgs } : {},
+}))
+
 describe('graphql-yoga', () => {
   const schema = createSchema({ typeDefs, resolvers })
   const yoga = createYoga({ schema, plugins: [useMetaPlugin()] })
@@ -142,11 +169,32 @@ describe('graphql-yoga', () => {
   })
 
   describe('when it sends full cart query and product page query with alias and fragments', async () => {
-    describe('when lookahead is called within non-Query resolver', async () => {
-      const result = await execute({
-        document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
-      })
+    const color = mockProductsWhereArgs.color.in[0]
+    const result = await execute({
+      document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
+      variables: { color },
+    })
 
+    describe('when lookahead is called within Query field resolver', async () => {
+      it('has find options in meta data including where argument of nested fields', () => {
+        expect(result.extensions?.meta?.['Query.page'].nestedFindOptions).toEqual({
+          include: [
+            {
+              association: 'content',
+              include: [
+                {
+                  association: 'products',
+                  where: mockProductsWhereArgs,
+                  include: [{ association: 'inventory' }],
+                },
+              ],
+            },
+          ],
+        })
+      })
+    })
+
+    describe('when lookahead is called within non-Query field resolver', async () => {
       it('returns full cart data with alias', () => {
         expect(result.data).toEqual({
           order: getMockFullCartWithProductGroupAlias(),
