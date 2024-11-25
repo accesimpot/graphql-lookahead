@@ -16,7 +16,6 @@
     "@types/node": "^20.14.15",
     "concurrently": "^9.1.0",
     "dev-utils": "workspace:*",
-    "graphql": "^16.9.0",
     "graphql-lookahead": "workspace:*",
     "main": "workspace:*",
     "nodemon": "^3.1.7",
