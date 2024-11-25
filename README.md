@@ -89,7 +89,7 @@ export const resolvers: Resolver = {
 ### Types
 
 ```ts
-import type { GraphQLResolveInfo, SelectionNode } from 'graphql'
+import type { GraphQLResolveInfo, GraphQLField, SelectionNode } from 'graphql'
 
 function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
@@ -105,6 +105,7 @@ function lookahead<TState, RError extends boolean | undefined>(options: {
 
 type HandlerDetails<TState> = {
   field: string
+  fieldDef: GraphQLField
   selection: SelectionNode
   state: TState
   type: string

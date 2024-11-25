@@ -1,11 +1,17 @@
-import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
+import type {
+  GraphQLResolveInfo,
+  SelectionSetNode,
+  SelectionNode,
+  GraphQLInputField,
+  GraphQLField,
+} from 'graphql'
 import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } from './generic'
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
 type HandlerDetails<TState> = {
   field: string
-  fieldDef: NonNullable<ReturnType<typeof getChildFields>>[string] | undefined
+  fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   selection: SelectionNode
   state: TState
   type: string
@@ -190,9 +196,13 @@ function lookDeeperWithDefaults<TState>(options: {
     if (selectionTypeName) {
       const handlerArgs: HandlerDetails<TState> = {
         field: selectionName,
+
         get fieldDef() {
           const siblingFields = getChildFields(options.info.schema, options.type)
-          return siblingFields?.[selectionName]
+          const fieldDef = siblingFields?.[selectionName]
+
+          // We know the field is present in the schema and we know it is not an input
+          return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
         },
         selection,
         state: options.state,
