@@ -58,7 +58,7 @@ export const resolvers: Resolver = {
       return mockFullCart
     },
 
-    page: async (_parent, _args, context, info) => {
+    page: (_parent, _args, context, info) => {
       const nestedFindOptions: QueryFilter = {}
 
       lookahead({
