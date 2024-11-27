@@ -63,6 +63,9 @@
   "files": [
     "packages/graphql-lookahead/dist"
   ],
+  "peerDependencies": {
+    "graphql": "16.x"
+  },
   "devDependencies": {
     "@eslint/compat": "^1.2.3",
     "@eslint/js": "^9.15.0",
@@ -86,9 +89,6 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.15.0",
     "vitest": "^2.1.5"
-  },
-  "resolutions": {
-    "graphql": "^16.9.0"
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"

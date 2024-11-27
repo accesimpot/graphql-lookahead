@@ -8,6 +8,9 @@
     "build": "NODE_ENV=${NODE_ENV:-development} vite build",
     "types:check": "tsc --project tsconfig.lint.json"
   },
+  "peerDependencies": {
+    "graphql": "16.x"
+  },
   "devDependencies": {
     "@types/node": "^20.14.15",
     "dev-utils": "workspace:*",

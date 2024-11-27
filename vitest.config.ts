@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  /**
+   * @see https://github.com/vitest-dev/vitest/issues/4605#issuecomment-1847658160
+   */
+  resolve: { alias: { graphql: 'graphql/index.js' } },
+
   test: {
     include: ['**/*.spec.ts'],
     globalSetup: 'vitest.setup.ts',
