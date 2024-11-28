@@ -107,6 +107,7 @@ type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField
+  isList: boolean
   selection: FieldNode
   state: TState
   type: string

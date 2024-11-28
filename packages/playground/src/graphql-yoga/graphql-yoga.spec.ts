@@ -168,6 +168,10 @@ describe('graphql-yoga', () => {
           ],
         })
       })
+
+      it('finds "products" as the first list field', () => {
+        expect(result.extensions?.meta?.['Query.page'].firstListFound).toEqual('products')
+      })
     })
 
     describe('when lookahead is called within non-Query field resolver', async () => {

@@ -7,6 +7,7 @@ import {
   type FragmentSpreadNode,
   type InlineFragmentNode,
   getArgumentValues,
+  isListType,
 } from 'graphql'
 import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } from './generic'
 
@@ -16,6 +17,10 @@ type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /**
+   * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
+   */
+  isList: boolean
   selection: FieldNode
   state: TState
   type: string
@@ -214,6 +219,9 @@ function lookDeeperWithDefaults<TState>(options: {
 
       if (!isFragmentSelection) {
         const handlerArgs: HandlerDetails<TState> = {
+          get args() {
+            return getArgumentValues(this.fieldDef, this.selection, options.info.variableValues)
+          },
           field: selectionName,
 
           get fieldDef() {
@@ -223,8 +231,8 @@ function lookDeeperWithDefaults<TState>(options: {
             // We know the field is present in the schema and we know it is not an input
             return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
           },
-          get args() {
-            return getArgumentValues(this.fieldDef, this.selection, options.info.variableValues)
+          get isList() {
+            return isListType(this.fieldDef.type)
           },
           // We execute the handlers only if it is not a fragment selection
           selection: selection as Exclude<
