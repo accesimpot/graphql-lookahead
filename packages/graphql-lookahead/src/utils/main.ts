@@ -1,11 +1,27 @@
-import type { GraphQLResolveInfo, SelectionSetNode, SelectionNode } from 'graphql'
-import { getSelectionDetails, findTypeName, findSelectionName } from './generic'
+import {
+  type GraphQLResolveInfo,
+  type SelectionSetNode,
+  type FieldNode,
+  type GraphQLInputField,
+  type GraphQLField,
+  type FragmentSpreadNode,
+  type InlineFragmentNode,
+  getArgumentValues,
+  isListType,
+} from 'graphql'
+import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } from './generic'
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
 type HandlerDetails<TState> = {
+  args: { [arg: string]: unknown }
   field: string
-  selection: SelectionNode
+  fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /**
+   * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
+   */
+  isList: boolean
+  selection: FieldNode
   state: TState
   type: string
 }
@@ -34,7 +50,13 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: Pick<
     GraphQLResolveInfo,
-    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+    | 'operation'
+    | 'schema'
+    | 'fragments'
+    | 'returnType'
+    | 'fieldNodes'
+    | 'fieldName'
+    | 'variableValues'
   >
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
@@ -67,7 +89,13 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   depth?: number | null
   info: Pick<
     GraphQLResolveInfo,
-    'operation' | 'schema' | 'fragments' | 'returnType' | 'fieldNodes' | 'fieldName'
+    | 'operation'
+    | 'schema'
+    | 'fragments'
+    | 'returnType'
+    | 'fieldNodes'
+    | 'fieldName'
+    | 'variableValues'
   >
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
@@ -116,7 +144,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
@@ -148,7 +176,7 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
 
 export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next?: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -165,7 +193,7 @@ export function lookDeeperAndThrow<TState>(options: {
 function lookDeeperWithDefaults<TState>(options: {
   depth: number | null
   depthIndex: number
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments'>
+  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
   next: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -187,18 +215,40 @@ function lookDeeperWithDefaults<TState>(options: {
     })
 
     if (selectionTypeName) {
-      const handlerArgs: HandlerDetails<TState> = {
-        field: selectionName,
-        selection,
-        state: options.state,
-        type: selectionTypeName,
-      }
       let lookDeeperState = options.state
 
       if (!isFragmentSelection) {
-        if (options.until({ nextSelectionSet, ...handlerArgs })) return true
+        const handlerArgs: HandlerDetails<TState> = {
+          get args() {
+            return getArgumentValues(this.fieldDef, this.selection, options.info.variableValues)
+          },
+          field: selectionName,
 
-        if (nextSelectionSet) lookDeeperState = options.next({ nextSelectionSet, ...handlerArgs })
+          get fieldDef() {
+            const siblingFields = getChildFields(options.info.schema, options.type)
+            const fieldDef = siblingFields?.[selectionName]
+
+            // We know the field is present in the schema and we know it is not an input
+            return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
+          },
+          get isList() {
+            return isListType(this.fieldDef.type)
+          },
+          // We execute the handlers only if it is not a fragment selection
+          selection: selection as Exclude<
+            typeof selection,
+            FragmentSpreadNode | InlineFragmentNode
+          >,
+          state: options.state,
+          type: selectionTypeName,
+        }
+
+        // Using `Object.assign` instead of object spread operator to prevent executing the
+        // getters if not requested (`fieldDef`, `args`).
+        if (options.until(Object.assign(handlerArgs, { nextSelectionSet }))) return true
+
+        if (nextSelectionSet)
+          lookDeeperState = options.next(Object.assign(handlerArgs, { nextSelectionSet }))
       }
 
       // Don't dig deeper if the loop has reached the provided `depth` value

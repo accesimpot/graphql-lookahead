@@ -94,6 +94,10 @@ importers:
         version: 4.3.0(@types/node@20.17.7)(rollup@4.27.4)(typescript@5.7.2)(vite@5.4.11(@types/node@20.17.7))
 
   packages/graphql-lookahead:
+    dependencies:
+      graphql:
+        specifier: 16.x
+        version: 16.9.0
     devDependencies:
       '@types/node':
         specifier: ^20.14.15
@@ -101,9 +105,6 @@ importers:
       dev-utils:
         specifier: workspace:*
         version: link:../dev-utils
-      graphql:
-        specifier: ^16.9.0
-        version: 16.9.0
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
@@ -112,6 +113,10 @@ importers:
         version: 5.4.11(@types/node@20.17.7)
 
   packages/playground:
+    dependencies:
+      graphql:
+        specifier: 16.x
+        version: 16.9.0
     devDependencies:
       '@types/node':
         specifier: ^20.14.15
@@ -122,9 +127,6 @@ importers:
       dev-utils:
         specifier: workspace:*
         version: link:../dev-utils
-      graphql:
-        specifier: ^16.9.0
-        version: 16.9.0
       graphql-lookahead:
         specifier: workspace:*
         version: link:../..

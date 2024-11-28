@@ -142,11 +142,39 @@ describe('graphql-yoga', () => {
   })
 
   describe('when it sends full cart query and product page query with alias and fragments', async () => {
-    describe('when lookahead is called within non-Query resolver', async () => {
-      const result = await execute({
-        document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
+    const color = 'blue'
+    const result = await execute({
+      document: getFixtureQuery('graphql-yoga/queries/cart-and-page.gql'),
+      variables: { color },
+    })
+
+    describe('when lookahead is called within Query field resolver', async () => {
+      it('has find options in meta data including where argument of nested fields', () => {
+        expect(result.extensions?.meta?.['Query.page'].nestedFindOptions).toEqual({
+          include: [
+            {
+              association: 'content',
+              include: [
+                {
+                  association: 'products',
+                  where: {
+                    id: { eq: '123' },
+                    color: { in: [color] },
+                  },
+                  include: [{ association: 'inventory' }],
+                },
+              ],
+            },
+          ],
+        })
       })
 
+      it('finds "products" as the first list field', () => {
+        expect(result.extensions?.meta?.['Query.page'].firstListFound).toEqual('products')
+      })
+    })
+
+    describe('when lookahead is called within non-Query field resolver', async () => {
       it('returns full cart data with alias', () => {
         expect(result.data).toEqual({
           order: getMockFullCartWithProductGroupAlias(),
