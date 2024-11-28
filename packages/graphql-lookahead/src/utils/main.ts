@@ -17,6 +17,9 @@ type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /**
+   * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
+   */
   isList: boolean
   selection: FieldNode
   state: TState
