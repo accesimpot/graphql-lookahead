@@ -83,6 +83,17 @@ export const resolvers: Resolver = {
         'Query.page': { nestedFindOptions },
       }
 
+      lookahead({
+        info,
+        until: ({ field, isList }) => {
+          if (isList) {
+            Object.assign(context.request.metaData['Query.page'], { firstListFound: field })
+            return true
+          }
+          return false
+        },
+      })
+
       return {
         content: {
           get __typename() {
