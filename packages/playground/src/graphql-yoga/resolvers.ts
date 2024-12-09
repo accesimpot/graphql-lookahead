@@ -30,6 +30,24 @@ export const resolvers: Resolver = {
 
       lookahead({
         info,
+
+        until({ sourceType, field }) {
+          if (sourceType === 'Product' && field === 'color') {
+            return {
+              afterAllSelections() {
+                context.request.metaData = {
+                  ...context.request.metaData,
+                  afterAllSelections: { sourceType, field },
+                }
+              },
+            }
+          }
+          return false
+        },
+      })
+
+      lookahead({
+        info,
         state: sequelizeQueryFilters,
 
         next({ state, type }) {

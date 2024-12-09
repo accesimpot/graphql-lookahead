@@ -42,6 +42,13 @@ describe('graphql-yoga', () => {
       )
     })
 
+    it('has "afterAllSelections" set to Product/color in meta data', () => {
+      expect(result.extensions?.meta?.afterAllSelections).toEqual({
+        sourceType: 'Product',
+        field: 'color',
+      })
+    })
+
     it('has "invalidNext" set to true in meta data', () => {
       expect(result.extensions?.meta?.['Query.order'].returnValue.invalidNext).toBe(true)
     })
