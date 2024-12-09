@@ -37,7 +37,10 @@ export const resolvers: Resolver = {
               afterAllSelections() {
                 context.request.metaData = {
                   ...context.request.metaData,
-                  afterAllSelections: { sourceType, field },
+                  afterAllSelections: [
+                    ...(context.request.metaData?.afterAllSelections || []),
+                    { sourceType, field },
+                  ],
                 }
               },
             }
