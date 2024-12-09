@@ -22,6 +22,7 @@ export type HandlerDetails<TState> = {
    */
   isList: boolean
   selection: FieldNode
+  sourceType: string
   state: TState
   type: string
 }
@@ -239,6 +240,7 @@ function lookDeeperWithDefaults<TState>(options: {
             typeof selection,
             FragmentSpreadNode | InlineFragmentNode
           >,
+          sourceType: options.type,
           state: options.state,
           type: selectionTypeName,
         }
