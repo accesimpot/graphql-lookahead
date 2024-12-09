@@ -31,6 +31,10 @@ export type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet?: SelectionSetNode
 }
 
+export type UntilHandlerDetailsReturn<TState> =
+  | boolean
+  | { afterAllSelections: (details: UntilHandlerDetails<TState>) => void }
+
 export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet: SelectionSetNode
 }
@@ -42,7 +46,7 @@ export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
  *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
- * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
@@ -62,7 +66,7 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
-  until?: (details: UntilHandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   try {
     return lookaheadAndThrow(options)
@@ -101,7 +105,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
-  until?: (details: UntilHandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   const { info } = options
   const state = options.state as TState
@@ -136,7 +140,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  * @type RError -
  *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
- * @param options.next - Handler called for every nested field within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
@@ -151,7 +155,7 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until?: (details: UntilHandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   try {
     return lookDeeperAndThrow(options)
@@ -182,7 +186,7 @@ export function lookDeeperAndThrow<TState>(options: {
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until?: (details: UntilHandlerDetails<TState>) => boolean
+  until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   const depth: number | null = typeof options.depth === 'number' ? options.depth : null
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
@@ -199,8 +203,10 @@ function lookDeeperWithDefaults<TState>(options: {
   selectionSet: SelectionSetNode
   state: TState
   type: string
-  until: (details: UntilHandlerDetails<TState>) => boolean
+  until: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean | void {
+  const afterAllSelectionsHooks: (() => void)[] = []
+
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
     const selectionName = findSelectionName(selection)
@@ -246,8 +252,17 @@ function lookDeeperWithDefaults<TState>(options: {
         }
 
         // Using `Object.assign` instead of object spread operator to prevent executing the
-        // getters if not requested (`fieldDef`, `args`).
-        if (options.until(Object.assign(handlerArgs, { nextSelectionSet }))) return true
+        // getters if not requested (i.e. `fieldDef`, `args`).
+        const untilArgs = Object.assign(handlerArgs, { nextSelectionSet })
+        const untilReturnValue = options.until(untilArgs)
+
+        if (untilReturnValue) {
+          if (typeof untilReturnValue === 'object') {
+            afterAllSelectionsHooks.push(() => untilReturnValue.afterAllSelections(untilArgs))
+          } else {
+            return true
+          }
+        }
 
         if (nextSelectionSet)
           lookDeeperState = options.next(Object.assign(handlerArgs, { nextSelectionSet }))
@@ -273,4 +288,5 @@ function lookDeeperWithDefaults<TState>(options: {
       }
     }
   }
+  afterAllSelectionsHooks.every(hook => hook())
 }
