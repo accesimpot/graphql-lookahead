@@ -13,7 +13,7 @@ import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } 
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
-type HandlerDetails<TState> = {
+export type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -26,11 +26,11 @@ type HandlerDetails<TState> = {
   type: string
 }
 
-type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
+export type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet?: SelectionSetNode
 }
 
-type NextHandlerDetails<TState> = HandlerDetails<TState> & {
+export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet: SelectionSetNode
 }
 
