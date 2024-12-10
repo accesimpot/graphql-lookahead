@@ -288,5 +288,5 @@ function lookDeeperWithDefaults<TState>(options: {
       }
     }
   }
-  afterAllSelectionsHooks.every(hook => hook())
+  afterAllSelectionsHooks.forEach(hook => hook())
 }

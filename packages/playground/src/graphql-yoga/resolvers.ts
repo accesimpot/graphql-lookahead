@@ -32,7 +32,7 @@ export const resolvers: Resolver = {
         info,
 
         until({ sourceType, field }) {
-          if (sourceType === 'Product' && field === 'color') {
+          if (sourceType === 'Product' && (field === 'color' || field === 'size')) {
             return {
               afterAllSelections() {
                 context.request.metaData = {
