@@ -42,12 +42,19 @@ describe('graphql-yoga', () => {
       )
     })
 
-    it('has "afterAllSelections" set to Product/color only once in meta data', () => {
+    it('has "afterAllSelections" set to Product/color and Product/size in meta data', () => {
       expect(result.extensions?.meta?.afterAllSelections?.[0]).toEqual({
         sourceType: 'Product',
         field: 'color',
       })
-      expect(result.extensions?.meta?.afterAllSelections?.length).toBe(1)
+      expect(result.extensions?.meta?.afterAllSelections?.[1]).toEqual({
+        sourceType: 'Product',
+        field: 'size',
+      })
+    })
+
+    it('has called "afterAllSelections" only once per field', () => {
+      expect(result.extensions?.meta?.afterAllSelections?.length).toBe(2)
     })
 
     it('has "invalidNext" set to true in meta data', () => {
