@@ -13,18 +13,11 @@ import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } 
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
-type PickAndPossiblyTheRest<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>
-
-export type GenericGraphQLResolveInfo = PickAndPossiblyTheRest<
-  GraphQLResolveInfo,
-  'operation' | 'schema' | 'fragments' | 'variableValues'
->
-
 export type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
-  info: GenericGraphQLResolveInfo
+  info: GraphQLResolveInfo
   /**
    * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
    */
@@ -61,16 +54,7 @@ export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
  */
 export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<
-    GraphQLResolveInfo,
-    | 'operation'
-    | 'schema'
-    | 'fragments'
-    | 'returnType'
-    | 'fieldNodes'
-    | 'fieldName'
-    | 'variableValues'
-  >
+  info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
@@ -100,16 +84,7 @@ export function lookahead<TState, RError extends boolean | undefined>(options: {
 
 export function lookaheadAndThrow<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<
-    GraphQLResolveInfo,
-    | 'operation'
-    | 'schema'
-    | 'fragments'
-    | 'returnType'
-    | 'fieldNodes'
-    | 'fieldName'
-    | 'variableValues'
-  >
+  info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
@@ -157,7 +132,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: GenericGraphQLResolveInfo
+  info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
@@ -189,7 +164,7 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
 
 export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
-  info: GenericGraphQLResolveInfo
+  info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -206,7 +181,7 @@ export function lookDeeperAndThrow<TState>(options: {
 function lookDeeperWithDefaults<TState>(options: {
   depth: number | null
   depthIndex: number
-  info: GenericGraphQLResolveInfo
+  info: GraphQLResolveInfo
   next: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
