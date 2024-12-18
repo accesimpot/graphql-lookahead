@@ -13,10 +13,18 @@ import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } 
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
+type PickAndPossiblyTheRest<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>
+
+export type GenericGraphQLResolveInfo = PickAndPossiblyTheRest<
+  GraphQLResolveInfo,
+  'operation' | 'schema' | 'fragments' | 'variableValues'
+>
+
 export type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  info: GenericGraphQLResolveInfo
   /**
    * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
    */
@@ -149,7 +157,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
+  info: GenericGraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
@@ -181,7 +189,7 @@ export function lookDeeper<TState, RError extends boolean | undefined>(options: 
 
 export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
+  info: GenericGraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -198,7 +206,7 @@ export function lookDeeperAndThrow<TState>(options: {
 function lookDeeperWithDefaults<TState>(options: {
   depth: number | null
   depthIndex: number
-  info: Pick<GraphQLResolveInfo, 'schema' | 'fragments' | 'variableValues'>
+  info: GenericGraphQLResolveInfo
   next: (details: NextHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
@@ -238,6 +246,8 @@ function lookDeeperWithDefaults<TState>(options: {
             // We know the field is present in the schema and we know it is not an input
             return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
           },
+          info: options.info,
+
           get isList() {
             return isListType(this.fieldDef.type)
           },
