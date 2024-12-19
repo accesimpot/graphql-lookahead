@@ -1,6 +1,7 @@
 import type { createSchema } from 'graphql-yoga'
 // use relative import to use src files for test coverage
 import { lookahead } from '../../../graphql-lookahead/src'
+import { findTypeName } from '../../../graphql-lookahead/src/utils/generic'
 import { callInvalidOrderLookaheads } from './testUtils'
 import { mockFullCart, mockPage } from '../mockData'
 
@@ -31,8 +32,16 @@ export const resolvers: Resolver = {
       lookahead({
         info,
 
-        until({ sourceType, field }) {
+        until({ info, sourceType, field }) {
           if (sourceType === 'Product' && (field === 'color' || field === 'size')) {
+            context.request.metaData = {
+              ...context.request.metaData,
+
+              infoSpecificToField: {
+                fieldNames: [info.fieldName, field],
+                parentTypes: [findTypeName(info.parentType), sourceType],
+              },
+            }
             return {
               afterAllSelections() {
                 context.request.metaData = {
@@ -95,6 +104,15 @@ export const resolvers: Resolver = {
           state.include.push(nextState)
 
           return nextState
+        },
+      })
+
+      // Test case: running a similar check than the one above in order to hit the cache
+      // for `info` and `fieldDef` (`fieldDef` getter is called from `args` getter).
+      lookahead({
+        info,
+        until({ info, args }) {
+          return !!(info.fieldName === 'content' && args.where && typeof args.where === 'object')
         },
       })
 

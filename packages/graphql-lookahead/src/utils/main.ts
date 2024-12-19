@@ -2,8 +2,9 @@ import {
   type GraphQLResolveInfo,
   type SelectionSetNode,
   type FieldNode,
-  type GraphQLInputField,
   type GraphQLField,
+  type GraphQLInputField,
+  type GraphQLObjectType,
   type FragmentSpreadNode,
   type InlineFragmentNode,
   getArgumentValues,
@@ -16,7 +17,11 @@ const ERROR_PREFIX = '[graphql-lookahead]'
 export type HandlerDetails<TState> = {
   args: { [arg: string]: unknown }
   field: string
+  /** @private */
+  _fieldDef?: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** @private */
+  _info?: GraphQLResolveInfo
   info: GraphQLResolveInfo
   /**
    * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
@@ -208,6 +213,12 @@ function lookDeeperWithDefaults<TState>(options: {
       let lookDeeperState = options.state
 
       if (!isFragmentSelection) {
+        // We execute the handlers only if it is not a fragment selection
+        const accurateSelection = selection as Exclude<
+          typeof selection,
+          FragmentSpreadNode | InlineFragmentNode
+        >
+
         const handlerArgs: HandlerDetails<TState> = {
           get args() {
             return getArgumentValues(this.fieldDef, this.selection, options.info.variableValues)
@@ -215,22 +226,47 @@ function lookDeeperWithDefaults<TState>(options: {
           field: selectionName,
 
           get fieldDef() {
+            if (this._fieldDef) return this._fieldDef
+
             const siblingFields = getChildFields(options.info.schema, options.type)
             const fieldDef = siblingFields?.[selectionName]
 
             // We know the field is present in the schema and we know it is not an input
-            return fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
+            this._fieldDef = fieldDef as NonNullable<Exclude<typeof fieldDef, GraphQLInputField>>
+
+            return this._fieldDef
           },
-          info: options.info,
+
+          /**
+           * Make the GraphQLResolveInfo specific to the current field state except for `info.path`
+           * (it will always be the initial `info.path` - to improve).
+           */
+          get info() {
+            if (this._info) return this._info
+
+            const fieldName = this.field
+            const fieldDef = this.fieldDef
+
+            this._info = {
+              ...options.info,
+              fieldName,
+              fieldNodes: options.selectionSet.selections as ReadonlyArray<
+                typeof accurateSelection
+              >,
+              returnType: fieldDef.type,
+
+              get parentType() {
+                // At this point, we know the type exists and must be a GraphQLObjectType
+                return options.info.schema.getType(options.type) as GraphQLObjectType
+              },
+            }
+            return this._info
+          },
 
           get isList() {
             return isListType(this.fieldDef.type)
           },
-          // We execute the handlers only if it is not a fragment selection
-          selection: selection as Exclude<
-            typeof selection,
-            FragmentSpreadNode | InlineFragmentNode
-          >,
+          selection: accurateSelection,
           sourceType: options.type,
           state: options.state,
           type: selectionTypeName,
