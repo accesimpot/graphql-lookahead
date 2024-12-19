@@ -42,6 +42,18 @@ describe('graphql-yoga', () => {
       )
     })
 
+    it('has accurate info.fieldName in meta data', () => {
+      const { fieldNames } = result.extensions?.meta?.infoSpecificToField || {}
+      const [infoField, field] = fieldNames
+      expect(infoField).toBe(field)
+    })
+
+    it('has accurate info.parentType in meta data', () => {
+      const { parentTypes } = result.extensions?.meta?.infoSpecificToField || {}
+      const [infoParentType, sourceType] = parentTypes
+      expect(infoParentType).toBe(sourceType)
+    })
+
     it('has "afterAllSelections" set to Product/color and Product/size in meta data', () => {
       expect(result.extensions?.meta?.afterAllSelections?.[0]).toEqual({
         sourceType: 'Product',
