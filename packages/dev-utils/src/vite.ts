@@ -55,7 +55,6 @@ export function generateViteConfig(options: {
     },
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      preventAssignment: true,
     },
 
     plugins,

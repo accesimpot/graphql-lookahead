@@ -16,13 +16,13 @@
     "graphql": "16.x"
   },
   "devDependencies": {
-    "@types/node": "^20.14.15",
+    "@types/node": "^22.15.0",
     "concurrently": "^9.1.0",
     "dev-utils": "workspace:*",
     "graphql-lookahead": "workspace:*",
     "main": "workspace:*",
     "nodemon": "^3.1.7",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11"
+    "vite": "^7.0.6"
   }
 }
