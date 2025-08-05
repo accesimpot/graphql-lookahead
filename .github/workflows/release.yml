@@ -49,6 +49,7 @@ jobs:
 
     env:
       NX_NO_CLOUD: 'true'
+      CI_FORCE_RELEASE_RUN: ${{ secrets.CI_FORCE_RELEASE_RUN }}
 
     steps:
       - name: Checkout branch 🛎
@@ -90,7 +91,7 @@ jobs:
           echo "count=${#projects_array[@]}" >> $GITHUB_OUTPUT
 
       - name: Build main package 📦
-        if: steps.main-package-affected.outputs.count > 0
+        if: steps.main-package-affected.outputs.count > 0 || ${{ env.CI_FORCE_RELEASE_RUN }} == 'true'
         run: pnpm main build
 
       # A release is made if the prefix is feat, fix, perf, chore(deps), or docs(README)
@@ -117,7 +118,7 @@ jobs:
       #   - revert: Reverts a previous commit
       #
       - name: Release
-        if: steps.main-package-affected.outputs.count > 0
+        if: steps.main-package-affected.outputs.count > 0 || ${{ env.CI_FORCE_RELEASE_RUN }} == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
