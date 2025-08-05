@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/node": "^22.15.0",
     "dev-utils": "workspace:*",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.2",
     "vite": "^7.0.6"
   }
 }
