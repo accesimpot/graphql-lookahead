@@ -6,6 +6,13 @@ on:
       - main
       - beta
 
+# https://docs.npmjs.com/trusted-publishers#step-2-configure-your-cicd-workflow
+permissions:
+  id-token: write # Required for OIDC
+  contents: write # Required for semantic-release to push commits, tags, and create releases
+  issues: write # Required by @semantic-release/github to comment on released issues
+  pull-requests: write # Required by @semantic-release/github to comment on released pull requests
+
 jobs:
   should-proceed:
     name: Proceed with the release?
@@ -52,11 +59,21 @@ jobs:
       CI_FORCE_RELEASE_RUN: ${{ secrets.CI_FORCE_RELEASE_RUN }}
 
     steps:
+      # https://semantic-release.gitbook.io/semantic-release/recipes/ci-configurations/github-actions#pushing-package.json-changes-to-your-repository
       - name: Checkout branch 🛎
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
+
+      - name: Get GitHub App token 🔐
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: graphql-lookahead
 
       # https://nx.dev/packages/nx/documents/affected
       - name: Set SHAs for `nx affected` commands
@@ -120,6 +137,5 @@ jobs:
       - name: Release
         if: steps.main-package-affected.outputs.count > 0 || ${{ env.CI_FORCE_RELEASE_RUN }} == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: pnpm semantic-release
