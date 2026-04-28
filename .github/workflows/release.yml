@@ -116,7 +116,7 @@ jobs:
           echo "count=${#projects_array[@]}" >> $GITHUB_OUTPUT
 
       - name: Build main package 📦
-        if: steps.main-package-affected.outputs.count > 0 || ${{ env.CI_FORCE_RELEASE_RUN }} == 'true'
+        if: ${{ steps.main-package-affected.outputs.count > 0 || env.CI_FORCE_RELEASE_RUN == 'true' }}
         run: pnpm main build
 
       # A release is made if the prefix is feat, fix, perf, chore(deps), or docs(README)
@@ -143,7 +143,7 @@ jobs:
       #   - revert: Reverts a previous commit
       #
       - name: Release
-        if: steps.main-package-affected.outputs.count > 0 || ${{ env.CI_FORCE_RELEASE_RUN }} == 'true'
+        if: ${{ steps.main-package-affected.outputs.count > 0 || env.CI_FORCE_RELEASE_RUN == 'true' }}
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: pnpm semantic-release
