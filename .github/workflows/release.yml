@@ -94,6 +94,14 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: pnpm install --prod=false
 
+      # Trusted publishing: verifyConditions uses JS OIDC, but `npm publish` must use npm CLI ≥11.5.1.
+      # Node 22 still ships npm 10.x, and execa({ preferLocal: true }) does not find npm in root .bin,
+      # so the runner's old `npm` was used → ENEEDAUTH on publish.
+      - name: Use npm CLI with trusted publishing support 📌
+        run: |
+          npm install -g npm@^11.5.1
+          echo "npm $(npm --version) — OIDC publish requires 11.5.1+"
+
       - name: Any change affecting the main package❔
         id: main-package-affected
         # Make sure the job fails with exit code 1 if the nx command fails
