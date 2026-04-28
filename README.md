@@ -9,11 +9,11 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 
 <br>
 
-❤️ Provided by [Accès Impôt](https://www.acces-impot.com)'s engineering team
+❤️ Provided by [Elio Tax](https://www.elio-tax.com?utm_source=github&utm_medium=referral&utm_campaign=graphql-lookahead-readme)'s engineering team
 
-| <a href="https://www.acces-impot.com" target="_blank"><img width="338" alt="Accès Impôt" src="https://github.com/user-attachments/assets/79aa6364-51d1-4482-b31e-680568d647f0"></a> |
+| <a href="https://www.elio-tax.com?utm_source=github&utm_medium=referral&utm_campaign=graphql-lookahead-readme" target="_blank"><img width="265" alt="Elio Tax" src="https://github.com/user-attachments/assets/b3ae1fcb-2242-4e68-a36e-671fe39c1174"></a> |
 | :---: |
-| 🇨🇦 _Online tax declaration service_ 🇨🇦 |
+| 🇨🇦 _Online tax filing service_ 🇨🇦 |
 
 <br>
 
