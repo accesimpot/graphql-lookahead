@@ -55,7 +55,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NX_NO_CLOUD: 'true'
       CI_FORCE_RELEASE_RUN: ${{ secrets.CI_FORCE_RELEASE_RUN }}
 
     steps:
@@ -64,7 +63,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          fetch-depth: 0
+          fetch-depth: 0 # Required for nrwl/nx-set-shas
 
       - name: Get GitHub App token 🔐
         id: app-token
@@ -75,7 +74,10 @@ jobs:
           owner: ${{ github.repository_owner }}
           repositories: graphql-lookahead
 
-      # https://nx.dev/packages/nx/documents/affected
+      # NRWL action name refers to Nx “affected”, but the step only resolves robust base/head
+      # SHAs for git and tools like Turborepo (`TURBO_SCM_BASE` / `--affected`). Nx does not
+      # run here; keeping this action avoids hand-rolled SHA logic on PRs vs pushes.
+      # https://nx.dev/nx-api/nx/documents/affected
       - name: Set SHAs for `nx affected` commands
         id: setSHAs
         uses: nrwl/nx-set-shas@v4
@@ -83,7 +85,8 @@ jobs:
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # Reads exact version from root package.json "packageManager"
+          package_json_file: package.json
 
       - name: Setup node env 🏗
         uses: actions/setup-node@v4
@@ -104,16 +107,29 @@ jobs:
 
       - name: Any change affecting the main package❔
         id: main-package-affected
-        # Make sure the job fails with exit code 1 if the nx command fails
+        env:
+          TURBO_TELEMETRY_DISABLED: '1'
+          TURBO_SCM_BASE: ${{ steps.setSHAs.outputs.base }}
+          TURBO_SCM_HEAD: ${{ steps.setSHAs.outputs.head }}
         run: |
-          projects=$(pnpm --silent nx show projects --projects main --affected || echo 'error')
-          projects+=$(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} -- README.md || echo 'error')
-          projects+=$(git diff --name-only --diff-filter=d ${{ steps.setSHAs.outputs.base }} -- package.json || echo 'error')
+          set -euo pipefail
+          base="${{ steps.setSHAs.outputs.base }}"
+          head="${{ steps.setSHAs.outputs.head }}"
 
-          projects_array=($projects)
-          [[ ${projects_array[*]} =~ 'error' ]] && exit 1
+          # Matches semantic-release rules (docs/README, root manifests, lockfile, workspace).
+          if ! git diff --quiet "$base" "$head" -- \
+            README.md package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json; then
+            echo "count=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          echo "count=${#projects_array[@]}" >> $GITHUB_OUTPUT
+          # Turborepo: main's build task or any of its workspace dependencies (transitive).
+          task_count="$(pnpm exec turbo run build --filter=main --affected --dry-run=json 2>/dev/null | jq -r '.tasks // [] | length')"
+          if [ "${task_count:-0}" -gt 0 ]; then
+            echo "count=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build main package 📦
         if: ${{ steps.main-package-affected.outputs.count > 0 || env.CI_FORCE_RELEASE_RUN == 'true' }}
