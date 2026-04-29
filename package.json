@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.3",
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^9.39.4",
     "@graphql-tools/executor-http": "^1.1.9",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
@@ -80,18 +80,43 @@
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/eslint__js": "^8.42.3",
     "@types/lodash.clonedeep": "^4.5.9",
-    "@vitest/coverage-istanbul": "^3.1.1",
+    "@vitest/coverage-istanbul": "^4.1.5",
     "concurrently": "^9.1.0",
-    "eslint": "^9.15.0",
+    "eslint": "^9.39.4",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.10.3",
     "lodash.clonedeep": "^4.5.0",
-    "nx": "21.3.11",
+    "nx": "^22.6.5",
     "prettier": "^3.3.3",
     "semantic-release": "^25.0.3",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.15.0",
-    "vitest": "^3.1.1"
+    "typescript-eslint": "^8.59.1",
+    "vitest": "^4.1.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "handlebars": "^4.7.9",
+      "lodash": "^4.18.0",
+      "lodash-es": "^4.18.0",
+      "rollup": "^4.59.0",
+      "follow-redirects": "^1.16.0",
+      "tmp": "^0.2.4",
+      "postcss": "^8.5.10",
+      "flatted": "^3.4.2",
+      "js-yaml": "^4.1.1",
+      "yaml": "^2.8.3",
+      "@microsoft/tsdoc-config>ajv": "^8.18.0",
+      "@rushstack/node-core-library>ajv": "^8.18.0",
+      "@microsoft/api-extractor>minimatch": "^10.2.5",
+      "@isaacs/brace-expansion": "^5.0.1",
+      "@rollup/pluginutils>picomatch": "^4.0.4",
+      "micromatch>picomatch": "^2.3.2",
+      "@vue/language-core>minimatch": "^10.2.5",
+      "minimatch@3.1.5>brace-expansion": "^1.1.13",
+      "nx>brace-expansion": "^5.0.5",
+      "anymatch>picomatch": "^2.3.2",
+      "readdirp>picomatch": "^2.3.2"
+    }
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"
