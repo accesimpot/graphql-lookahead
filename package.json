@@ -5,6 +5,7 @@
   "repository": "accesimpot/graphql-lookahead",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@10.33.2",
   "keywords": [
     "graphql",
     "lookahead",
@@ -18,7 +19,7 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development concurrently --kill-others -p=none \"pnpm main: dev\" \"pnpm playground: dev\"",
-    "build": "nx run-many -t build",
+    "build": "TURBO_TELEMETRY_DISABLED=1 turbo run build",
     "lint": "pnpm lint:all",
     "lint:fix": "pnpm lint:all:fix",
     "lint:all": "pnpm lint:base .",
@@ -28,13 +29,14 @@
     "lint:base": "eslint --cache",
     "format": "prettier --write --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
     "format:check": "prettier --check --cache \"**/*.{js,mjs,cjs,ts,mts,cts,json,yaml,yml,gql,graphql,md}\"",
-    "types:check": "nx run-many -t types:check",
+    "types:check": "TURBO_TELEMETRY_DISABLED=1 turbo run types:check",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "dev-utils": "bash -c 'nx ${0} dev-utils $@'",
-    "main": "bash -c 'nx ${0} main $@'",
+    "dev-utils": "TURBO_TELEMETRY_DISABLED=1 turbo run --filter=dev-utils",
+    "dev-utils:": "pnpm -F=dev-utils",
+    "main": "TURBO_TELEMETRY_DISABLED=1 turbo run --filter=main",
     "main:": "pnpm -F=main",
-    "playground": "bash -c 'nx ${0} playground $@'",
+    "playground": "TURBO_TELEMETRY_DISABLED=1 turbo run --filter=playground",
     "playground:": "pnpm -F=playground"
   },
   "exports": {
@@ -71,7 +73,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.3",
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^9.39.4",
     "@graphql-tools/executor-http": "^1.1.9",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
@@ -80,18 +82,18 @@
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/eslint__js": "^8.42.3",
     "@types/lodash.clonedeep": "^4.5.9",
-    "@vitest/coverage-istanbul": "^3.1.1",
+    "@vitest/coverage-istanbul": "^4.1.5",
     "concurrently": "^9.1.0",
-    "eslint": "^9.15.0",
+    "eslint": "^9.39.4",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.10.3",
     "lodash.clonedeep": "^4.5.0",
-    "nx": "21.3.11",
     "prettier": "^3.3.3",
     "semantic-release": "^25.0.3",
+    "turbo": "^2.9.6",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.15.0",
-    "vitest": "^3.1.1"
+    "typescript-eslint": "^8.59.1",
+    "vitest": "^4.1.5"
   },
   "bugs": {
     "url": "https://github.com/accesimpot/graphql-lookahead/issues"

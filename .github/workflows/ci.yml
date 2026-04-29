@@ -16,15 +16,16 @@ jobs:
 
     env:
       NODE_ENV: test
-      NX_NO_CLOUD: 'true'
 
     steps:
       - name: Checkout branch 🛎
         uses: actions/checkout@v4
         with:
-          # Required for step: Set SHAs for `nx affected` commands
-          fetch-depth: 0
+          fetch-depth: 0 # Required for nrwl/nx-set-shas
 
+      # NRWL action name refers to Nx “affected”, but the step only resolves robust base/head
+      # SHAs for git and tools like Turborepo (`TURBO_SCM_BASE` / `--affected`). Nx does not
+      # run here; keeping this action avoids hand-rolled SHA logic on PRs vs pushes.
       # https://nx.dev/nx-api/nx/documents/affected
       - name: Set SHAs for `nx affected` commands
         id: setSHAs
@@ -33,7 +34,8 @@ jobs:
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # Reads exact version from root package.json "packageManager"
+          package_json_file: package.json
 
       - name: Setup node env 🏗
         uses: actions/setup-node@v4
@@ -46,14 +48,27 @@ jobs:
 
       - name: Any change made to packages❔
         id: affected
-        # Make sure the job fails with exit code 1 if the nx command fails
+        env:
+          TURBO_TELEMETRY_DISABLED: '1'
+          TURBO_SCM_BASE: ${{ steps.setSHAs.outputs.base }}
+          TURBO_SCM_HEAD: ${{ steps.setSHAs.outputs.head }}
         run: |
-          projects=$(pnpm --silent nx show projects --affected || echo 'error')
-          [ "$projects" == 'error' ] && exit 1
+          set -euo pipefail
+          base="${{ steps.setSHAs.outputs.base }}"
+          head="${{ steps.setSHAs.outputs.head }}"
 
-          array=($projects)
+          if ! git diff --quiet "$base" "$head" -- \
+              package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json; then
+            echo "count=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          echo "count=${#array[@]}" >> $GITHUB_OUTPUT
+          task_count="$(pnpm exec turbo run build --affected --dry-run=json 2>/dev/null | jq -r '.tasks // [] | length')"
+          if [ "${task_count:-0}" -gt 0 ]; then
+            echo "count=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build all packages 📦
         if: steps.affected.outputs.count > 0
@@ -76,6 +91,5 @@ jobs:
 
       - name: Run tests 🧪
         if: steps.affected.outputs.count > 0
-        # Not running with "nx affected" since we need to run the playground integration tests even
-        # if there is no change in the playground package
+        # Always run the full Vitest suite when any workspace package changed (includes playground integration tests).
         run: pnpm test

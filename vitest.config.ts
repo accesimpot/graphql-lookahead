@@ -14,6 +14,7 @@ export default defineConfig({
       enabled: true,
       provider: 'istanbul',
       include: ['packages/graphql-lookahead/src/**'],
+      exclude: ['**/.DS_Store'],
 
       thresholds: {
         statements: 97,
