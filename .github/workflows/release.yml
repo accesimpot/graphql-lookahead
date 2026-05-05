@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout branch 🛎
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -60,7 +60,7 @@ jobs:
     steps:
       # https://semantic-release.gitbook.io/semantic-release/recipes/ci-configurations/github-actions#pushing-package.json-changes-to-your-repository
       - name: Checkout branch 🛎
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0 # Required for nrwl/nx-set-shas
