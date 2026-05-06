@@ -66,9 +66,9 @@ export type OnFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onFragment - Handler called for inline fragments and fragment spreads (not used together with `next` on the same selection). Receives the same `state` as `next` for that depth and may return the state passed to nested walks.
+ * @param options.onFragment - Hook called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
- * @param options.state - Initial state threaded through `next` and `onFragment` (and their nested calls).
+ * @param options.state - Initial state passed to `next` and `onFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState, RError extends boolean | undefined>(options: {
@@ -146,7 +146,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onFragment - Hook called for fragment selections (`next` is only called for field selections); see `lookahead`.
+ * @param options.onFragment - Hook called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
