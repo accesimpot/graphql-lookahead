@@ -219,6 +219,8 @@ export const resolvers: Resolver = {
 
 For each fragment step in the operation (`... on Type { }` or `...FragmentName`), `lookahead` calls `nextFragment` instead of `next`. It has the same `state` and return contract as `next` for nested handlers.
 
+Inline fragments without a type condition (e.g. `... @include(if: true) { }`) do _not_ invoke `nextFragment` (or `next` / `until` for that node). The walker still descends into their selection set using the parent GraphQL type and the current `state`.
+
 <br>
 
 ### More examples in integration tests

@@ -220,6 +220,31 @@ function lookDeeperWithDefaults<TState>(options: {
 
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
+    // Inline fragment without `on Type` (e.g. `... { f }` or `... @include(if: true) { f }`): no
+    // handlers, but keep traversing with the parent type and current state.
+    if (
+      selection.kind === 'InlineFragment' &&
+      !selection.typeCondition &&
+      selection.selectionSet &&
+      options.type
+    ) {
+      if (options.depth !== null && options.depthIndex >= options.depth - 1) continue
+
+      const returnValue = lookDeeperWithDefaults({
+        depth: options.depth,
+        depthIndex: options.depthIndex + 1,
+        info: options.info,
+        next: options.next,
+        nextFragment: options.nextFragment,
+        selectionSet: selection.selectionSet,
+        state: options.state,
+        type: options.type,
+        until: options.until,
+      })
+      if (returnValue) return returnValue
+      continue
+    }
+
     const selectionName = findSelectionName(selection)
 
     // This should only happen if the selection is invalid

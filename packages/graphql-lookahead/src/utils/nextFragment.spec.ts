@@ -5,10 +5,11 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLUnionType,
+  GraphQLInt,
   graphql,
   type GraphQLResolveInfo,
 } from 'graphql'
-import { lookaheadAndThrow } from './main'
+import { lookaheadAndThrow, lookahead } from './main'
 
 type PathState = { path: string[] }
 
@@ -112,6 +113,151 @@ describe('default next', () => {
     expect(result.errors).toBeUndefined()
     expect(childFieldState?.path).toEqual(['frag'])
     expect(childFieldState).not.toHaveProperty('isInitialState')
+  })
+})
+
+describe('untyped inline fragments', () => {
+  it('walks nested selections without calling nextFragment', async () => {
+    let nextFragmentCalls = 0
+    const untilFields: string[] = []
+
+    const orderType = new GraphQLObjectType({
+      name: 'Order',
+      fields: {
+        status: { type: new GraphQLNonNull(GraphQLString) },
+        total: { type: new GraphQLNonNull(GraphQLInt) },
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        order: {
+          type: orderType,
+          resolve(_root, _args, _ctx, info) {
+            lookaheadAndThrow({
+              info,
+              state: { path: [] } as PathState,
+              nextFragment() {
+                nextFragmentCalls++
+                return { path: [] }
+              },
+              until({ field }) {
+                untilFields.push(field)
+                return false
+              },
+            })
+            return { status: 'ok', total: 1 }
+          },
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          order {
+            ... {
+              total
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(nextFragmentCalls).toBe(0)
+    expect(untilFields).toContain('total')
+  })
+
+  it('does not descend into untyped fragment when depth stops at parent', async () => {
+    const untilFields: string[] = []
+
+    const orderType = new GraphQLObjectType({
+      name: 'Order',
+      fields: {
+        total: { type: new GraphQLNonNull(GraphQLInt) },
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        order: {
+          type: orderType,
+          resolve(_root, _args, _ctx, info) {
+            lookaheadAndThrow({
+              info,
+              depth: 1,
+              state: { path: [] } as PathState,
+              until({ field }) {
+                untilFields.push(field)
+                return false
+              },
+            })
+            return { total: 1 }
+          },
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          order {
+            ... {
+              total
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(untilFields).toHaveLength(0)
+  })
+
+  it('returns true when until matches inside untyped inline fragment', async () => {
+    const orderType = new GraphQLObjectType({
+      name: 'Order',
+      fields: {
+        total: { type: new GraphQLNonNull(GraphQLInt) },
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        order: {
+          type: orderType,
+          resolve(_root, _args, _ctx, info) {
+            const hit = lookahead({
+              info,
+              until: ({ field }) => field === 'total',
+            })
+            expect(hit).toBe(true)
+            return { total: 1 }
+          },
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          order {
+            ... {
+              total
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
   })
 })
 
