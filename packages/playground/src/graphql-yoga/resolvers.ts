@@ -28,6 +28,7 @@ export const resolvers: Resolver = {
         depth: 2,
       })
       const sequelizeQueryFilters: QueryFilter = {}
+      const orderOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -70,6 +71,11 @@ export const resolvers: Resolver = {
 
           return nextState
         },
+
+        onFragment({ sourceType, state, type }) {
+          orderOnFragmentTrace.push({ fragmentType: type, sourceType })
+          return state
+        },
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
@@ -82,6 +88,7 @@ export const resolvers: Resolver = {
             ...callInvalidOrderLookaheads(info),
           },
           sequelizeQueryFilters,
+          onFragmentTrace: orderOnFragmentTrace,
         },
       }
 
@@ -90,6 +97,7 @@ export const resolvers: Resolver = {
 
     page: (_parent, _args, context, info) => {
       const nestedFindOptions: QueryFilter = {}
+      const pageOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -105,6 +113,34 @@ export const resolvers: Resolver = {
 
           return nextState
         },
+
+        onFragment({ sourceType, state, type }) {
+          pageOnFragmentTrace.push({ fragmentType: type, sourceType })
+          return state
+        },
+      })
+
+      type FragmentProbeState = { fragmentSeen?: boolean }
+
+      lookahead({
+        info,
+        state: {} as FragmentProbeState,
+
+        next({ state, field, sourceType }) {
+          if (field === 'products' && sourceType === 'ProductPageContent') {
+            context.request.metaData = {
+              ...context.request.metaData,
+              productPageProductsNextStateTag:
+                state.fragmentSeen === true ? 'fromOnFragment' : null,
+            }
+          }
+          return state
+        },
+
+        onFragment({ state, type }) {
+          if (type === 'ProductPageContent') return { ...state, fragmentSeen: true }
+          return state
+        },
       })
 
       // Test case: running a similar check than the one above in order to hit the cache
@@ -119,7 +155,7 @@ export const resolvers: Resolver = {
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
-        'Query.page': { nestedFindOptions },
+        'Query.page': { nestedFindOptions, onFragmentTrace: pageOnFragmentTrace },
       }
 
       lookahead({
@@ -146,6 +182,7 @@ export const resolvers: Resolver = {
   ProductPageContent: {
     products: (_parent, _args, context, info) => {
       const sequelizeQueryFilters: QueryFilter = {}
+      const productsOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -159,12 +196,20 @@ export const resolvers: Resolver = {
 
           return nextState
         },
+
+        onFragment({ sourceType, state, type }) {
+          productsOnFragmentTrace.push({ fragmentType: type, sourceType })
+          return state
+        },
       })
 
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
-        'ProductPageContent.products': { sequelizeQueryFilters },
+        'ProductPageContent.products': {
+          sequelizeQueryFilters,
+          onFragmentTrace: productsOnFragmentTrace,
+        },
       }
 
       return mockPage.content.products
