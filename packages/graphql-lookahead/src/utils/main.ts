@@ -197,9 +197,9 @@ export function lookDeeperAndThrow<TState>(options: {
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   const depth: number | null = typeof options.depth === 'number' ? options.depth : null
-  const next: NonNullable<typeof options.next> = options.next || (() => options.state)
+  const next: NonNullable<typeof options.next> = options.next || (({ state }) => state)
   const nextFragment: NonNullable<typeof options.nextFragment> =
-    options.nextFragment || (() => options.state)
+    options.nextFragment || (({ state }) => state)
   const until: NonNullable<typeof options.until> = options.until || (() => false)
 
   return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, nextFragment, until })
