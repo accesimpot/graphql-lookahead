@@ -15,7 +15,7 @@ import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
 /**
- * Fields shared by {@link HandlerDetails} and {@link OnFragmentHandlerDetails}.
+ * Fields shared by {@link HandlerDetails} and {@link NextFragmentHandlerDetails}.
  * For field handlers, `type` is the selected field’s output type.
  * For fragment handlers, `type` is the fragment condition type (`on` / `fragment ... on`).
  */
@@ -53,7 +53,7 @@ export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet: SelectionSetNode
 }
 
-export type OnFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
+export type NextFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
   nextSelectionSet: SelectionSetNode
   selection: FragmentSpreadNode | InlineFragmentNode
 }
@@ -66,16 +66,16 @@ export type OnFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onFragment - Hook called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.nextFragment - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
- * @param options.state - Initial state passed to `next` and `onFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.state - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
-  onFragment?: (details: OnFragmentHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
@@ -106,7 +106,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
-  onFragment?: (details: OnFragmentHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
@@ -126,7 +126,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
       depth: options.depth,
       info,
       next: options.next,
-      onFragment: options.onFragment,
+      nextFragment: options.nextFragment,
       onError: options.onError,
       selectionSet,
       state,
@@ -146,18 +146,18 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
- * @param options.onFragment - Hook called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.nextFragment - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
- * @param options.state - Initial state passed to `next` and `onFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.state - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
-  onFragment?: (details: OnFragmentHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
   state: TState
@@ -190,7 +190,7 @@ export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
-  onFragment?: (details: OnFragmentHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
@@ -198,11 +198,11 @@ export function lookDeeperAndThrow<TState>(options: {
 }): boolean {
   const depth: number | null = typeof options.depth === 'number' ? options.depth : null
   const next: NonNullable<typeof options.next> = options.next || (() => options.state)
-  const onFragment: NonNullable<typeof options.onFragment> =
-    options.onFragment || (() => options.state)
+  const nextFragment: NonNullable<typeof options.nextFragment> =
+    options.nextFragment || (() => options.state)
   const until: NonNullable<typeof options.until> = options.until || (() => false)
 
-  return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, onFragment, until })
+  return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, nextFragment, until })
 }
 
 function lookDeeperWithDefaults<TState>(options: {
@@ -210,7 +210,7 @@ function lookDeeperWithDefaults<TState>(options: {
   depthIndex: number
   info: GraphQLResolveInfo
   next: (details: NextHandlerDetails<TState>) => TState
-  onFragment: (details: OnFragmentHandlerDetails<TState>) => TState
+  nextFragment: (details: NextFragmentHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
@@ -237,7 +237,7 @@ function lookDeeperWithDefaults<TState>(options: {
 
       if (isFragmentSelection) {
         if (nextSelectionSet)
-          lookDeeperState = options.onFragment({
+          lookDeeperState = options.nextFragment({
             info: options.info,
             nextSelectionSet,
             selection: selection as FragmentSpreadNode | InlineFragmentNode,
@@ -246,7 +246,7 @@ function lookDeeperWithDefaults<TState>(options: {
             type: selectionTypeName,
           })
       }
-      // Execute `until` and `next` handlers only for field selections (fragments use `onFragment`).
+      // Execute `until` and `next` handlers only for field selections (fragments use `nextFragment`).
       else {
         const accurateSelection = selection as Exclude<
           typeof selection,
@@ -334,7 +334,7 @@ function lookDeeperWithDefaults<TState>(options: {
           depthIndex: options.depthIndex + 1,
           info: options.info,
           next: options.next,
-          onFragment: options.onFragment,
+          nextFragment: options.nextFragment,
           selectionSet: nextSelectionSet,
           state: lookDeeperState,
           type: selectionTypeName,

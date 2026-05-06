@@ -28,7 +28,7 @@ export const resolvers: Resolver = {
         depth: 2,
       })
       const sequelizeQueryFilters: QueryFilter = {}
-      const orderOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
+      const orderNextFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -72,8 +72,8 @@ export const resolvers: Resolver = {
           return nextState
         },
 
-        onFragment({ sourceType, state, type }) {
-          orderOnFragmentTrace.push({ fragmentType: type, sourceType })
+        nextFragment({ sourceType, state, type }) {
+          orderNextFragmentTrace.push({ fragmentType: type, sourceType })
           return state
         },
       })
@@ -88,7 +88,7 @@ export const resolvers: Resolver = {
             ...callInvalidOrderLookaheads(info),
           },
           sequelizeQueryFilters,
-          onFragmentTrace: orderOnFragmentTrace,
+          nextFragmentTrace: orderNextFragmentTrace,
         },
       }
 
@@ -97,7 +97,7 @@ export const resolvers: Resolver = {
 
     page: (_parent, _args, context, info) => {
       const nestedFindOptions: QueryFilter = {}
-      const pageOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
+      const pageNextFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -114,8 +114,8 @@ export const resolvers: Resolver = {
           return nextState
         },
 
-        onFragment({ sourceType, state, type }) {
-          pageOnFragmentTrace.push({ fragmentType: type, sourceType })
+        nextFragment({ sourceType, state, type }) {
+          pageNextFragmentTrace.push({ fragmentType: type, sourceType })
           return state
         },
       })
@@ -131,13 +131,13 @@ export const resolvers: Resolver = {
             context.request.metaData = {
               ...context.request.metaData,
               productPageProductsNextStateTag:
-                state.fragmentSeen === true ? 'fromOnFragment' : null,
+                state.fragmentSeen === true ? 'fromNextFragment' : null,
             }
           }
           return state
         },
 
-        onFragment({ state, type }) {
+        nextFragment({ state, type }) {
           if (type === 'ProductPageContent') return { ...state, fragmentSeen: true }
           return state
         },
@@ -155,7 +155,7 @@ export const resolvers: Resolver = {
       // Will be picked up by `useMetaPlugin` to add "extensions.meta" to the final response
       context.request.metaData = {
         ...context.request.metaData,
-        'Query.page': { nestedFindOptions, onFragmentTrace: pageOnFragmentTrace },
+        'Query.page': { nestedFindOptions, nextFragmentTrace: pageNextFragmentTrace },
       }
 
       lookahead({
@@ -182,7 +182,7 @@ export const resolvers: Resolver = {
   ProductPageContent: {
     products: (_parent, _args, context, info) => {
       const sequelizeQueryFilters: QueryFilter = {}
-      const productsOnFragmentTrace: { fragmentType: string; sourceType: string }[] = []
+      const productsNextFragmentTrace: { fragmentType: string; sourceType: string }[] = []
 
       lookahead({
         info,
@@ -197,8 +197,8 @@ export const resolvers: Resolver = {
           return nextState
         },
 
-        onFragment({ sourceType, state, type }) {
-          productsOnFragmentTrace.push({ fragmentType: type, sourceType })
+        nextFragment({ sourceType, state, type }) {
+          productsNextFragmentTrace.push({ fragmentType: type, sourceType })
           return state
         },
       })
@@ -208,7 +208,7 @@ export const resolvers: Resolver = {
         ...context.request.metaData,
         'ProductPageContent.products': {
           sequelizeQueryFilters,
-          onFragmentTrace: productsOnFragmentTrace,
+          nextFragmentTrace: productsNextFragmentTrace,
         },
       }
 

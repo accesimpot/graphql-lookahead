@@ -146,8 +146,8 @@ describe('graphql-yoga', () => {
       })
     })
 
-    it('has empty order onFragmentTrace (no fragments in query)', () => {
-      expect(result.extensions?.meta?.['Query.order'].onFragmentTrace).toEqual([])
+    it('has empty order nextFragmentTrace (no fragments in query)', () => {
+      expect(result.extensions?.meta?.['Query.order'].nextFragmentTrace).toEqual([])
     })
   })
 
@@ -204,15 +204,15 @@ describe('graphql-yoga', () => {
         expect(result.extensions?.meta?.['Query.page'].firstListFound).toEqual('products')
       })
 
-      it('invokes onFragment with union and concrete types for inline fragments', () => {
-        expect(result.extensions?.meta?.['Query.page'].onFragmentTrace).toEqual([
+      it('invokes nextFragment with union and concrete types for inline fragments', () => {
+        expect(result.extensions?.meta?.['Query.page'].nextFragmentTrace).toEqual([
           { fragmentType: 'ProductPageContent', sourceType: 'PageContent' },
           { fragmentType: 'Product', sourceType: 'Product' },
         ])
       })
 
-      it('passes onFragment return state to nested next (e.g. products field)', () => {
-        expect(result.extensions?.meta?.productPageProductsNextStateTag).toBe('fromOnFragment')
+      it('passes nextFragment return state to nested next (e.g. products field)', () => {
+        expect(result.extensions?.meta?.productPageProductsNextStateTag).toBe('fromNextFragment')
       })
     })
 
@@ -230,14 +230,14 @@ describe('graphql-yoga', () => {
         ).toEqual({ include: [{ model: 'Inventory' }] })
       })
 
-      it('invokes onFragment for the inline spread on Product', () => {
-        expect(result.extensions?.meta?.['ProductPageContent.products'].onFragmentTrace).toEqual([
+      it('invokes nextFragment for the inline spread on Product', () => {
+        expect(result.extensions?.meta?.['ProductPageContent.products'].nextFragmentTrace).toEqual([
           { fragmentType: 'Product', sourceType: 'Product' },
         ])
       })
 
-      it('invokes onFragment for the named fragment on Product in the order selection', () => {
-        expect(result.extensions?.meta?.['Query.order'].onFragmentTrace).toEqual([
+      it('invokes nextFragment for the named fragment on Product in the order selection', () => {
+        expect(result.extensions?.meta?.['Query.order'].nextFragmentTrace).toEqual([
           { fragmentType: 'Product', sourceType: 'Product' },
         ])
       })
