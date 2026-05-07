@@ -26,6 +26,7 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
   - [Options](#options)
 - [Advanced usage](#advanced-usage)
   - [Example: Sequelize with nested query filters](#example-sequelize-with-nested-query-filters)
+  - [Fragment selections (`nextFragment`)](#fragment-selections-nextfragment)
   - [More examples in integration tests](#more-examples-in-integration-tests)
 - [Playground](#playground)
 - [Contribution](#contribution)
@@ -93,19 +94,25 @@ function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean
 
-type HandlerDetails<TState> = {
+type HandlerDetailsBase<TState> = {
+  info: GraphQLResolveInfo
+  sourceType: string
+  state: TState
+  type: string
+}
+
+type HandlerDetails<TState> = HandlerDetailsBase<TState> & {
   args: { [arg: string]: unknown }
   field: string
   fieldDef: GraphQLField
   isList: boolean
   selection: FieldNode
-  state: TState
-  type: string
 }
 
 type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
@@ -114,6 +121,11 @@ type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
 
 type NextHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet: SelectionSetNode
+}
+
+type NextFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
+  nextSelectionSet: SelectionSetNode
+  selection: FragmentSpreadNode | InlineFragmentNode
 }
 ```
 
@@ -126,8 +138,9 @@ type NextHandlerDetails<TState> = HandlerDetails<TState> & {
 | `depth` | ❔ _Optional_ - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`. |
 | `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
 | `next` | ❔ _Optional_ - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
+| `nextFragment` | ❔ _Optional_ - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](#fragment-selections-nextfragment). |
 | `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
-| `state` | ❔ _Optional_ - Initial state used in `next` handler. See [Advanced usage](#advanced-usage).|
+| `state` | ❔ _Optional_ - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](#advanced-usage). |
 | `until` | ❔ _Optional_ - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well. |
 
 <br>
@@ -199,6 +212,14 @@ export const resolvers: Resolver = {
   },
 }
 ```
+
+<br>
+
+### Fragment selections (`nextFragment`)
+
+For each fragment step in the operation (`... on Type { }` or `...FragmentName`), `lookahead` calls `nextFragment` instead of `next`. It has the same `state` and return contract as `next` for nested handlers.
+
+Inline fragments without a type condition (e.g. `... @include(if: true) { }`) do _not_ invoke `nextFragment` (or `next` / `until` for that node). The walker still descends into their selection set using the parent GraphQL type and the current `state`.
 
 <br>
 

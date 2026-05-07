@@ -14,7 +14,19 @@ import { getSelectionDetails, findTypeName, findSelectionName, getChildFields } 
 
 const ERROR_PREFIX = '[graphql-lookahead]'
 
-export type HandlerDetails<TState> = {
+/**
+ * Fields shared by {@link HandlerDetails} and {@link NextFragmentHandlerDetails}.
+ * For field handlers, `type` is the selected field’s output type.
+ * For fragment handlers, `type` is the fragment condition type (`on` / `fragment ... on`).
+ */
+export type HandlerDetailsBase<TState> = {
+  info: GraphQLResolveInfo
+  sourceType: string
+  state: TState
+  type: string
+}
+
+export type HandlerDetails<TState> = HandlerDetailsBase<TState> & {
   args: { [arg: string]: unknown }
   field: string
   /** @private */
@@ -22,15 +34,11 @@ export type HandlerDetails<TState> = {
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   /** @private */
   _info?: GraphQLResolveInfo
-  info: GraphQLResolveInfo
   /**
    * Whether or not the current field type is a GraphQL List (`[Foo!]` is a list, `Foo!` is not).
    */
   isList: boolean
   selection: FieldNode
-  sourceType: string
-  state: TState
-  type: string
 }
 
 export type UntilHandlerDetails<TState> = HandlerDetails<TState> & {
@@ -45,6 +53,11 @@ export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
   nextSelectionSet: SelectionSetNode
 }
 
+export type NextFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
+  nextSelectionSet: SelectionSetNode
+  selection: FragmentSpreadNode | InlineFragmentNode
+}
+
 /**
  * Use `lookahead` to check within the resolver function if particular fields are part of the
  * operation (`info.operation`). This allows you to avoid querying nested database relationships
@@ -53,14 +66,16 @@ export type NextHandlerDetails<TState> = HandlerDetails<TState> & {
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.info - GraphQLResolveInfo object which is usually the fourth argument of the resolver function.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.nextFragment - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
- * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.state - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
@@ -91,6 +106,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
@@ -110,6 +126,7 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
       depth: options.depth,
       info,
       next: options.next,
+      nextFragment: options.nextFragment,
       onError: options.onError,
       selectionSet,
       state,
@@ -129,16 +146,18 @@ export function lookaheadAndThrow<TState, RError extends boolean | undefined>(op
  *
  * @param options.depth - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`.
  * @param options.next - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.nextFragment - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.onError - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`.
  * @param options.schema - GraphQLResolveInfo['schema'] object
  * @param options.selectionSet - SelectionSetNode picked from GraphQLResolveInfo['operation']
- * @param options.state - Initial state used in `next` handler. See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
+ * @param options.state - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](https://github.com/accesimpot/graphql-lookahead#advanced-usage).
  * @param options.until - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well.
  */
 export function lookDeeper<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   selectionSet: SelectionSetNode
   state: TState
@@ -171,16 +190,19 @@ export function lookDeeperAndThrow<TState>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
   next?: (details: NextHandlerDetails<TState>) => TState
+  nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
   until?: (details: UntilHandlerDetails<TState>) => UntilHandlerDetailsReturn<TState>
 }): boolean {
   const depth: number | null = typeof options.depth === 'number' ? options.depth : null
-  const next: NonNullable<typeof options.next> = options.next || (() => options.state)
+  const next: NonNullable<typeof options.next> = options.next || (({ state }) => state)
+  const nextFragment: NonNullable<typeof options.nextFragment> =
+    options.nextFragment || (({ state }) => state)
   const until: NonNullable<typeof options.until> = options.until || (() => false)
 
-  return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, until })
+  return !!lookDeeperWithDefaults({ ...options, depth, depthIndex: 0, next, nextFragment, until })
 }
 
 function lookDeeperWithDefaults<TState>(options: {
@@ -188,6 +210,7 @@ function lookDeeperWithDefaults<TState>(options: {
   depthIndex: number
   info: GraphQLResolveInfo
   next: (details: NextHandlerDetails<TState>) => TState
+  nextFragment: (details: NextFragmentHandlerDetails<TState>) => TState
   selectionSet: SelectionSetNode
   state: TState
   type: string
@@ -197,6 +220,31 @@ function lookDeeperWithDefaults<TState>(options: {
 
   // Each selection represents a field or a fragment you're requesting inside the operation
   for (const selection of options.selectionSet.selections) {
+    // Inline fragment without `on Type` (e.g. `... { f }` or `... @include(if: true) { f }`): no
+    // handlers, but keep traversing with the parent type and current state.
+    if (
+      selection.kind === 'InlineFragment' &&
+      !selection.typeCondition &&
+      selection.selectionSet &&
+      options.type
+    ) {
+      if (options.depth !== null && options.depthIndex >= options.depth - 1) continue
+
+      const returnValue = lookDeeperWithDefaults({
+        depth: options.depth,
+        depthIndex: options.depthIndex + 1,
+        info: options.info,
+        next: options.next,
+        nextFragment: options.nextFragment,
+        selectionSet: selection.selectionSet,
+        state: options.state,
+        type: options.type,
+        until: options.until,
+      })
+      if (returnValue) return returnValue
+      continue
+    }
+
     const selectionName = findSelectionName(selection)
 
     // This should only happen if the selection is invalid
@@ -212,8 +260,19 @@ function lookDeeperWithDefaults<TState>(options: {
     if (selectionTypeName) {
       let lookDeeperState = options.state
 
-      if (!isFragmentSelection) {
-        // We execute the handlers only if it is not a fragment selection
+      if (isFragmentSelection) {
+        if (nextSelectionSet)
+          lookDeeperState = options.nextFragment({
+            info: options.info,
+            nextSelectionSet,
+            selection: selection as FragmentSpreadNode | InlineFragmentNode,
+            sourceType: options.type,
+            state: options.state,
+            type: selectionTypeName,
+          })
+      }
+      // Execute `until` and `next` handlers only for field selections (fragments use `nextFragment`).
+      else {
         const accurateSelection = selection as Exclude<
           typeof selection,
           FragmentSpreadNode | InlineFragmentNode
@@ -300,6 +359,7 @@ function lookDeeperWithDefaults<TState>(options: {
           depthIndex: options.depthIndex + 1,
           info: options.info,
           next: options.next,
+          nextFragment: options.nextFragment,
           selectionSet: nextSelectionSet,
           state: lookDeeperState,
           type: selectionTypeName,
