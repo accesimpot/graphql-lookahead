@@ -16,6 +16,7 @@ permissions:
 jobs:
   should-proceed:
     name: Proceed with the release?
+    if: ${{ github.actor != 'acci-semantic-release-token[bot]' }}
     runs-on: ubuntu-latest
 
     outputs:
@@ -50,7 +51,7 @@ jobs:
 
   release:
     name: Release
-    if: needs.should-proceed.outputs.rebasing-beta == 'false'
+    if: ${{ github.actor != 'acci-semantic-release-token[bot]' && needs.should-proceed.outputs.rebasing-beta == 'false' }}
     needs: [should-proceed]
     runs-on: ubuntu-latest
 
