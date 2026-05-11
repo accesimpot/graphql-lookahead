@@ -40,9 +40,11 @@ jobs:
           fi
 
           changes=$(git diff HEAD..origin/main --name-only)
+          diff_exit=$?
 
-          if [[ $? != 0 ]]; then
+          if [[ $diff_exit != 0 ]]; then
             echo "rebasing=error" >> $GITHUB_OUTPUT
+            exit "$diff_exit"
           elif [[ $changes ]]; then
             echo "rebasing=false" >> $GITHUB_OUTPUT
           else
