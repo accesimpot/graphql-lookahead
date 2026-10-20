@@ -32,7 +32,7 @@ jobs:
         uses: nrwl/nx-set-shas@v4
 
       - name: Install pnpm 👨🏻‍💻
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           # Reads exact version from root package.json "packageManager"
           package_json_file: package.json
