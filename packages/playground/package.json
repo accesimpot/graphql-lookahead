@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "concurrently": "^9.2.0",
+    "concurrently": "^10.0.6",
     "dev-utils": "workspace:*",
     "graphql-lookahead": "workspace:*",
     "main": "workspace:*",
