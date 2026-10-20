@@ -29,7 +29,7 @@ jobs:
       # https://nx.dev/nx-api/nx/documents/affected
       - name: Set SHAs for `nx affected` commands
         id: setSHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
 
       - name: Install pnpm 👨🏻‍💻
         uses: pnpm/action-setup@v4
