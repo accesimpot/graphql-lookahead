@@ -4,8 +4,11 @@ import {
   type GraphQLInputField,
   type FieldNode,
   type SelectionSetNode,
+  isAbstractType,
+  isInterfaceType,
   isListType,
   isNonNullType,
+  isObjectType,
 } from 'graphql'
 import { findTypeName, getChildFields } from './generic'
 
@@ -306,24 +309,29 @@ function lookHigherWithDefaults<TState>(options: {
  *
  * `path.key` is the response key (alias or field name). Walk the operation from the root selection
  * set following response keys so nested aliases and fragment selections resolve correctly.
+ *
+ * When the same response key appears under multiple union/interface fragments (allowed when the
+ * selected types are compatible), `path.typename` picks the matching branch.
  */
 function resolveSchemaFieldName(
   info: GraphQLResolveInfo,
   targetPath: ResolvePath
 ): string | undefined {
-  const responseKeys: string[] = []
+  const steps: { responseKey: string; typename: string | undefined }[] = []
   let step: ResolvePath | undefined = targetPath
 
   while (step) {
-    if (typeof step.key === 'string') responseKeys.unshift(step.key)
+    if (typeof step.key === 'string') {
+      steps.unshift({ responseKey: step.key, typename: step.typename })
+    }
     step = step.prev
   }
 
   let selectionSet: SelectionSetNode | undefined = info.operation.selectionSet
   let fieldName: string | undefined
 
-  for (const responseKey of responseKeys) {
-    const fieldNode = findFieldByResponseKey(info, selectionSet, responseKey)
+  for (const { responseKey, typename } of steps) {
+    const fieldNode = findFieldByResponseKey(info, selectionSet, responseKey, typename)
     if (!fieldNode) return undefined
 
     fieldName = fieldNode.name.value
@@ -333,11 +341,17 @@ function resolveSchemaFieldName(
   return fieldName
 }
 
-/** Find a field selection by response key (`alias ?? name`), descending into fragments. */
+/**
+ * Find a field selection by response key (`alias ?? name`), descending into fragments.
+ *
+ * When `parentTypename` is set, typed fragments whose condition does not match that concrete
+ * (or abstract) parent type are skipped so union/interface aliases resolve to the runtime branch.
+ */
 function findFieldByResponseKey(
-  info: Pick<GraphQLResolveInfo, 'fragments'>,
+  info: Pick<GraphQLResolveInfo, 'fragments' | 'schema'>,
   selectionSet: SelectionSetNode | undefined,
-  responseKey: string
+  responseKey: string,
+  parentTypename?: string
 ): FieldNode | undefined {
   if (!selectionSet) return undefined
 
@@ -346,16 +360,51 @@ function findFieldByResponseKey(
       const key = selection.alias?.value ?? selection.name.value
       if (key === responseKey) return selection
     } else if (selection.kind === 'InlineFragment') {
-      const found = findFieldByResponseKey(info, selection.selectionSet, responseKey)
+      if (!typeConditionMatches(info, selection.typeCondition?.name.value, parentTypename)) {
+        continue
+      }
+
+      const found = findFieldByResponseKey(
+        info,
+        selection.selectionSet,
+        responseKey,
+        parentTypename
+      )
       if (found) return found
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = info.fragments[selection.name.value]
       if (!fragment) continue
 
-      const found = findFieldByResponseKey(info, fragment.selectionSet, responseKey)
+      if (!typeConditionMatches(info, fragment.typeCondition.name.value, parentTypename)) {
+        continue
+      }
+
+      const found = findFieldByResponseKey(info, fragment.selectionSet, responseKey, parentTypename)
       if (found) return found
     }
   }
 
   return undefined
+}
+
+function typeConditionMatches(
+  info: Pick<GraphQLResolveInfo, 'schema'>,
+  typeCondition: string | undefined,
+  parentTypename: string | undefined
+): boolean {
+  if (!parentTypename || !typeCondition) return true
+  if (typeCondition === parentTypename) return true
+
+  const conditionType = info.schema.getType(typeCondition)
+  const parentType = info.schema.getType(parentTypename)
+  if (
+    !conditionType ||
+    !parentType ||
+    !isAbstractType(conditionType) ||
+    (!isObjectType(parentType) && !isInterfaceType(parentType))
+  ) {
+    return false
+  }
+
+  return info.schema.isSubType(conditionType, parentType)
 }

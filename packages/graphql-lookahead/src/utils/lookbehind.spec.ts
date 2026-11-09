@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
+  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -557,6 +558,251 @@ describe('lookbehind with aliases', () => {
       { field: 'inner', responseKey: 'renamedInner', sourceType: 'BigBox' },
       { field: 'content', responseKey: 'renamedContent', sourceType: 'Page' },
       { field: 'page', responseKey: 'renamedPage', sourceType: 'Query' },
+    ])
+  })
+
+  it('prefers the matching union branch when the same alias maps to different fields', async () => {
+    const visited: Array<{ field: string; responseKey: string; sourceType: string }> = []
+
+    const sharedType = new GraphQLObjectType({
+      name: 'SharedChild',
+      fields: {
+        leaf: {
+          type: new GraphQLNonNull(GraphQLString),
+          resolve(_parent, _args, _ctx, info) {
+            lookbehindAndThrow({
+              info,
+              until({ field, responseKey, sourceType }) {
+                visited.push({ field, responseKey, sourceType })
+                return false
+              },
+            })
+            return 'x'
+          },
+        },
+      },
+    })
+    const typeA = new GraphQLObjectType({
+      name: 'TypeA',
+      fields: {
+        foo: {
+          type: new GraphQLNonNull(sharedType),
+          resolve: () => ({}),
+        },
+      },
+    })
+    const typeB = new GraphQLObjectType({
+      name: 'TypeB',
+      fields: {
+        bar: {
+          type: new GraphQLNonNull(sharedType),
+          resolve: () => ({}),
+        },
+      },
+    })
+    const unionType = new GraphQLUnionType({
+      name: 'AB',
+      types: [typeA, typeB],
+      resolveType(value: { __typename: string }) {
+        return value.__typename
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        root: {
+          type: unionType,
+          resolve: () => ({ __typename: 'TypeA' }),
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType })
+
+    // Put TypeB first so a naive AST walk would resolve `renamed` to `bar` before `foo`.
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          root {
+            ... on TypeB {
+              renamed: bar {
+                leaf
+              }
+            }
+            ... on TypeA {
+              renamed: foo {
+                leaf
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'foo', responseKey: 'renamed', sourceType: 'TypeA' },
+      { field: 'root', responseKey: 'root', sourceType: 'Query' },
+    ])
+  })
+
+  it('resolves aliases under interface fragments using runtime parent type', async () => {
+    const visited: Array<{ field: string; responseKey: string; sourceType: string }> = []
+
+    const metaType = new GraphQLObjectType({
+      name: 'Meta',
+      fields: {
+        leaf: {
+          type: new GraphQLNonNull(GraphQLString),
+          resolve(_parent, _args, _ctx, info) {
+            lookbehindAndThrow({
+              info,
+              until({ field, responseKey, sourceType }) {
+                visited.push({ field, responseKey, sourceType })
+                return false
+              },
+            })
+            return 'x'
+          },
+        },
+      },
+    })
+    const nodeInterface = new GraphQLInterfaceType({
+      name: 'Node',
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        meta: { type: new GraphQLNonNull(metaType) },
+      },
+    })
+    const userType = new GraphQLObjectType({
+      name: 'User',
+      interfaces: [nodeInterface],
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        meta: {
+          type: new GraphQLNonNull(metaType),
+          resolve: () => ({}),
+        },
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        node: {
+          type: nodeInterface,
+          resolve: () => ({ __typename: 'User', id: '1' }),
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType, types: [userType] })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          node {
+            ... on Node {
+              renamedMeta: meta {
+                leaf
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'meta', responseKey: 'renamedMeta', sourceType: 'User' },
+      { field: 'node', responseKey: 'node', sourceType: 'Query' },
+    ])
+  })
+
+  it('prefers the matching fragment spread when the same alias maps to different fields', async () => {
+    const visited: Array<{ field: string; responseKey: string; sourceType: string }> = []
+
+    const sharedType = new GraphQLObjectType({
+      name: 'SharedChild',
+      fields: {
+        leaf: {
+          type: new GraphQLNonNull(GraphQLString),
+          resolve(_parent, _args, _ctx, info) {
+            lookbehindAndThrow({
+              info,
+              until({ field, responseKey, sourceType }) {
+                visited.push({ field, responseKey, sourceType })
+                return false
+              },
+            })
+            return 'x'
+          },
+        },
+      },
+    })
+    const typeA = new GraphQLObjectType({
+      name: 'TypeA',
+      fields: {
+        foo: {
+          type: new GraphQLNonNull(sharedType),
+          resolve: () => ({}),
+        },
+      },
+    })
+    const typeB = new GraphQLObjectType({
+      name: 'TypeB',
+      fields: {
+        bar: {
+          type: new GraphQLNonNull(sharedType),
+          resolve: () => ({}),
+        },
+      },
+    })
+    const unionType = new GraphQLUnionType({
+      name: 'AB',
+      types: [typeA, typeB],
+      resolveType(value: { __typename: string }) {
+        return value.__typename
+      },
+    })
+    const queryType = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        root: {
+          type: unionType,
+          resolve: () => ({ __typename: 'TypeA' }),
+        },
+      },
+    })
+    const schema = new GraphQLSchema({ query: queryType })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          root {
+            ...TypeBFields
+            ...TypeAFields
+          }
+        }
+
+        fragment TypeBFields on TypeB {
+          renamed: bar {
+            leaf
+          }
+        }
+
+        fragment TypeAFields on TypeA {
+          renamed: foo {
+            leaf
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'foo', responseKey: 'renamed', sourceType: 'TypeA' },
+      { field: 'root', responseKey: 'root', sourceType: 'Query' },
     ])
   })
 
