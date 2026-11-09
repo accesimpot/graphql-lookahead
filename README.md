@@ -186,7 +186,7 @@ export const resolvers: Resolver = {
 
 Fragments do **not** appear as path steps (GraphQL’s resolve path only contains response keys and list indices). Resolvers nested inside inline fragments or fragment spreads still see the correct parent field chain.
 
-Aliases are supported: handlers receive the schema field name as `field`, and the response key as `responseKey` (same value when there is no alias).
+Aliases are supported: handlers receive the schema field name as `field`, and the response key as `responseKey` (same value when there is no alias). When the same alias appears under multiple union/interface fragments, `lookbehind` uses the runtime parent type (`path.typename`) to pick the matching branch.
 
 <br>
 
@@ -210,7 +210,7 @@ type PrevHandlerDetails<TState> = {
   fieldDef: GraphQLField
   isList: boolean
   listIndex?: number
-  path: Path
+  path: ResolvePath
   responseKey: string
   sourceType: string
   state: TState
