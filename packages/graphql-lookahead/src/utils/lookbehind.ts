@@ -2,6 +2,8 @@ import {
   type GraphQLResolveInfo,
   type GraphQLField,
   type GraphQLInputField,
+  type FieldNode,
+  type SelectionSetNode,
   isListType,
   isNonNullType,
 } from 'graphql'
@@ -16,13 +18,14 @@ export type ResolvePath = NonNullable<GraphQLResolveInfo['path']>
  * Details passed to `until` / `next` while walking ancestor fields via `info.path`.
  *
  * Unlike `lookahead` handlers, there is no selection AST node or argument map here — the resolve
- * `Path` only carries field names, owning types, and list indices. Fragments never appear on the
+ * `Path` only carries response keys, owning types, and list indices. Fragments never appear on the
  * path (only resolved fields do).
  */
 export type PrevHandlerDetails<TState> = {
   info: GraphQLResolveInfo
   /**
-   * Ancestor field name (`path.key` when it is a string).
+   * Ancestor schema field name. When the operation uses an alias, this is the real field name
+   * (e.g. `item` for `renamedItem: item`), resolved from the operation AST / fragments.
    */
   field: string
   fieldDef: GraphQLField<any, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -39,6 +42,10 @@ export type PrevHandlerDetails<TState> = {
    * Resolve path step for this ancestor (string `key`).
    */
   path: ResolvePath
+  /**
+   * Response key for this ancestor (`path.key`). Same as `field` when there is no alias.
+   */
+  responseKey: string
   /**
    * GraphQL type that owns `field` (`path.typename`).
    */
@@ -65,8 +72,11 @@ export type UntilPrevHandlerDetailsReturn<TState> =
  * `lookahead`, which starts at child fields rather than the resolver field itself.
  *
  * Inline fragments, fragment spreads, and untyped inline fragments do **not** appear as steps:
- * GraphQL’s resolve path only contains field names and list indices. Resolvers nested inside
+ * GraphQL’s resolve path only contains response keys and list indices. Resolvers nested inside
  * those fragments still see the correct parent field chain.
+ *
+ * Aliases are supported: `path.key` is the response key, but handlers receive the schema field
+ * name as `field` (and the response key as `responseKey`).
  *
  * @param options.depth - How many parent fields to visit (`depth: 1` is the immediate parent,
  *   `depth: null` is no limit). Default: `depth: null`.
@@ -227,7 +237,10 @@ function lookHigherWithDefaults<TState>(options: {
       continue
     }
 
-    const field = path.key
+    const responseKey = path.key
+    // `path.key` is the GraphQL response key (alias when one is used). Resolve the schema field
+    // name from the operation AST so aliased ancestors still match `fieldDef` / `until` checks.
+    const field = resolveSchemaFieldName(options.info, path) ?? responseKey
     const siblingFields = getChildFields(options.info.schema, sourceType)
     const rawFieldDef = siblingFields?.[field]
 
@@ -261,6 +274,7 @@ function lookHigherWithDefaults<TState>(options: {
       },
       ...(listIndex !== undefined ? { listIndex } : {}),
       path,
+      responseKey,
       sourceType,
       state,
       type,
@@ -285,4 +299,60 @@ function lookHigherWithDefaults<TState>(options: {
   }
 
   afterAllParentsHooks.forEach(hook => hook())
+}
+
+/**
+ * Resolve the schema field name for a resolve-path step.
+ *
+ * `path.key` is the response key (alias or field name). Walk the operation from the root selection
+ * set following response keys so nested aliases and fragment selections resolve correctly.
+ */
+function resolveSchemaFieldName(info: GraphQLResolveInfo, targetPath: ResolvePath): string | undefined {
+  const responseKeys: string[] = []
+  let step: ResolvePath | undefined = targetPath
+
+  while (step) {
+    if (typeof step.key === 'string') responseKeys.unshift(step.key)
+    step = step.prev
+  }
+
+  let selectionSet: SelectionSetNode | undefined = info.operation.selectionSet
+  let fieldName: string | undefined
+
+  for (const responseKey of responseKeys) {
+    const fieldNode = findFieldByResponseKey(info, selectionSet, responseKey)
+    if (!fieldNode) return undefined
+
+    fieldName = fieldNode.name.value
+    selectionSet = fieldNode.selectionSet
+  }
+
+  return fieldName
+}
+
+/** Find a field selection by response key (`alias ?? name`), descending into fragments. */
+function findFieldByResponseKey(
+  info: Pick<GraphQLResolveInfo, 'fragments'>,
+  selectionSet: SelectionSetNode | undefined,
+  responseKey: string
+): FieldNode | undefined {
+  if (!selectionSet) return undefined
+
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === 'Field') {
+      const key = selection.alias?.value ?? selection.name.value
+      if (key === responseKey) return selection
+    } else if (selection.kind === 'InlineFragment') {
+      const found = findFieldByResponseKey(info, selection.selectionSet, responseKey)
+      if (found) return found
+    } else if (selection.kind === 'FragmentSpread') {
+      const fragment = info.fragments[selection.name.value]
+      if (!fragment) continue
+
+      const found = findFieldByResponseKey(info, fragment.selectionSet, responseKey)
+      if (found) return found
+    }
+  }
+
+  return undefined
 }

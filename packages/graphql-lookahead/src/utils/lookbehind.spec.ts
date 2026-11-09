@@ -424,6 +424,242 @@ describe('lookbehind nested queries', () => {
   })
 })
 
+describe('lookbehind with aliases', () => {
+  it('resolves root and nested aliases to schema field names', async () => {
+    const visited: Array<Pick<PrevHandlerDetails<unknown>, 'field' | 'responseKey' | 'sourceType' | 'type'>> =
+      []
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        lookbehindAndThrow({
+          info,
+          until({ field, responseKey, sourceType, type }) {
+            visited.push({ field, responseKey, sourceType, type })
+            return false
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          renamedOrder: order {
+            renamedItem: item {
+              renamedProduct: product {
+                sku
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      {
+        field: 'product',
+        responseKey: 'renamedProduct',
+        sourceType: 'OrderItem',
+        type: 'Product',
+      },
+      {
+        field: 'item',
+        responseKey: 'renamedItem',
+        sourceType: 'Order',
+        type: 'OrderItem',
+      },
+      {
+        field: 'order',
+        responseKey: 'renamedOrder',
+        sourceType: 'Query',
+        type: 'Order',
+      },
+    ])
+  })
+
+  it('matches until handlers on schema field names when ancestors are aliased', async () => {
+    let hit: boolean | undefined
+    const visited: string[] = []
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        hit = lookbehind({
+          info,
+          until({ field }) {
+            visited.push(field)
+            return field === 'item'
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          renamedOrder: order {
+            renamedItem: item {
+              product {
+                sku
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(hit).toBe(true)
+    expect(visited).toEqual(['product', 'item'])
+  })
+
+  it('resolves aliases nested under typed inline fragments', async () => {
+    const visited: Array<{ field: string; responseKey: string; sourceType: string }> = []
+
+    const schema = createUnionSchema(info => {
+      lookbehindAndThrow({
+        info,
+        until({ field, responseKey, sourceType }) {
+          visited.push({ field, responseKey, sourceType })
+          return false
+        },
+      })
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          renamedPage: page {
+            renamedContent: content {
+              ... on SmallBox {
+                label
+              }
+              ... on BigBox {
+                renamedInner: inner {
+                  renamedChild: child {
+                    leaf
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'child', responseKey: 'renamedChild', sourceType: 'Inner' },
+      { field: 'inner', responseKey: 'renamedInner', sourceType: 'BigBox' },
+      { field: 'content', responseKey: 'renamedContent', sourceType: 'Page' },
+      { field: 'page', responseKey: 'renamedPage', sourceType: 'Query' },
+    ])
+  })
+
+  it('resolves aliases nested under fragment spreads', async () => {
+    const visited: Array<{ field: string; responseKey: string }> = []
+
+    const schema = createUnionSchema(info => {
+      lookbehindAndThrow({
+        info,
+        until({ field, responseKey }) {
+          visited.push({ field, responseKey })
+          return false
+        },
+      })
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          page {
+            content {
+              ...BigBoxFields
+            }
+          }
+        }
+
+        fragment BigBoxFields on BigBox {
+          renamedInner: inner {
+            renamedChild: child {
+              leaf
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'child', responseKey: 'renamedChild' },
+      { field: 'inner', responseKey: 'renamedInner' },
+      { field: 'content', responseKey: 'content' },
+      { field: 'page', responseKey: 'page' },
+    ])
+  })
+
+  it('exposes listIndex with aliased list ancestors', async () => {
+    const detailsByField: Record<string, { responseKey: string; listIndex?: number; isList: boolean }> =
+      {}
+    let captured = false
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        if (captured) return
+        captured = true
+
+        lookbehindAndThrow({
+          info,
+          until(details) {
+            detailsByField[details.field] = {
+              responseKey: details.responseKey,
+              listIndex: details.listIndex,
+              isList: details.isList,
+            }
+            return false
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          renamedOrder: order {
+            renamedItems: items {
+              product {
+                sku
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(detailsByField.product).toEqual({
+      responseKey: 'product',
+      listIndex: undefined,
+      isList: false,
+    })
+    expect(detailsByField.items).toEqual({
+      responseKey: 'renamedItems',
+      listIndex: 0,
+      isList: true,
+    })
+    expect(detailsByField.order).toEqual({
+      responseKey: 'renamedOrder',
+      listIndex: undefined,
+      isList: false,
+    })
+  })
+})
+
 describe('lookbehind with fragments', () => {
   it('walks parents when the resolve path starts inside a typed inline fragment', async () => {
     const visited: Array<{ field: string; sourceType: string }> = []
