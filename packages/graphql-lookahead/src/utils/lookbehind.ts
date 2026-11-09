@@ -307,7 +307,10 @@ function lookHigherWithDefaults<TState>(options: {
  * `path.key` is the response key (alias or field name). Walk the operation from the root selection
  * set following response keys so nested aliases and fragment selections resolve correctly.
  */
-function resolveSchemaFieldName(info: GraphQLResolveInfo, targetPath: ResolvePath): string | undefined {
+function resolveSchemaFieldName(
+  info: GraphQLResolveInfo,
+  targetPath: ResolvePath
+): string | undefined {
   const responseKeys: string[] = []
   let step: ResolvePath | undefined = targetPath
 

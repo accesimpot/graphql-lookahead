@@ -426,8 +426,9 @@ describe('lookbehind nested queries', () => {
 
 describe('lookbehind with aliases', () => {
   it('resolves root and nested aliases to schema field names', async () => {
-    const visited: Array<Pick<PrevHandlerDetails<unknown>, 'field' | 'responseKey' | 'sourceType' | 'type'>> =
-      []
+    const visited: Array<
+      Pick<PrevHandlerDetails<unknown>, 'field' | 'responseKey' | 'sourceType' | 'type'>
+    > = []
 
     const schema = createNestedSchema({
       onLeaf(info) {
@@ -603,8 +604,10 @@ describe('lookbehind with aliases', () => {
   })
 
   it('exposes listIndex with aliased list ancestors', async () => {
-    const detailsByField: Record<string, { responseKey: string; listIndex?: number; isList: boolean }> =
-      {}
+    const detailsByField: Record<
+      string,
+      { responseKey: string; listIndex?: number; isList: boolean }
+    > = {}
     let captured = false
 
     const schema = createNestedSchema({
