@@ -312,6 +312,11 @@ function lookHigherWithDefaults<TState>(options: {
  *
  * When the same response key appears under multiple union/interface fragments (allowed when the
  * selected types are compatible), `path.typename` picks the matching branch.
+ *
+ * GraphQL also merges repeated selections of the same response key (e.g. `item { id }` plus
+ * `...Extra` that selects `item { renamedProduct: product { … } }`). The alias may exist only on a
+ * later merged field node, so every matching node’s selection set is tried when resolving the next
+ * path step.
  */
 function resolveSchemaFieldName(
   info: GraphQLResolveInfo,
@@ -327,50 +332,67 @@ function resolveSchemaFieldName(
     step = step.prev
   }
 
-  let selectionSet: SelectionSetNode | undefined = info.operation.selectionSet
-  let fieldName: string | undefined
+  return resolveFieldNameFromSelectionSet(info, info.operation.selectionSet, steps, 0)
+}
 
-  for (const { responseKey, typename } of steps) {
-    const fieldNode = findFieldByResponseKey(info, selectionSet, responseKey, typename)
-    if (!fieldNode) return undefined
+function resolveFieldNameFromSelectionSet(
+  info: GraphQLResolveInfo,
+  selectionSet: SelectionSetNode | undefined,
+  steps: { responseKey: string; typename: string | undefined }[],
+  stepIndex: number
+): string | undefined {
+  if (!selectionSet || stepIndex >= steps.length) return undefined
 
-    fieldName = fieldNode.name.value
-    selectionSet = fieldNode.selectionSet
+  const { responseKey, typename } = steps[stepIndex]
+  const fieldNodes = findAllFieldsByResponseKey(info, selectionSet, responseKey, typename)
+  if (!fieldNodes.length) return undefined
+
+  const isLastStep = stepIndex === steps.length - 1
+  if (isLastStep) return fieldNodes[0].name.value
+
+  for (const fieldNode of fieldNodes) {
+    const fieldName = resolveFieldNameFromSelectionSet(
+      info,
+      fieldNode.selectionSet,
+      steps,
+      stepIndex + 1
+    )
+    if (fieldName !== undefined) return fieldName
   }
 
-  return fieldName
+  return undefined
 }
 
 /**
- * Find a field selection by response key (`alias ?? name`), descending into fragments.
+ * Collect every field selection with the given response key (`alias ?? name`), descending into
+ * fragments. GraphQL merges repeated selections, so callers must try each match when walking
+ * deeper path steps.
  *
  * When `parentTypename` is set, typed fragments whose condition does not match that concrete
  * (or abstract) parent type are skipped so union/interface aliases resolve to the runtime branch.
  */
-function findFieldByResponseKey(
+function findAllFieldsByResponseKey(
   info: Pick<GraphQLResolveInfo, 'fragments' | 'schema'>,
   selectionSet: SelectionSetNode | undefined,
   responseKey: string,
   parentTypename?: string
-): FieldNode | undefined {
-  if (!selectionSet) return undefined
+): FieldNode[] {
+  if (!selectionSet) return []
+
+  const matches: FieldNode[] = []
 
   for (const selection of selectionSet.selections) {
     if (selection.kind === 'Field') {
       const key = selection.alias?.value ?? selection.name.value
-      if (key === responseKey) return selection
+      if (key === responseKey) matches.push(selection)
     } else if (selection.kind === 'InlineFragment') {
       if (!typeConditionMatches(info, selection.typeCondition?.name.value, parentTypename)) {
         continue
       }
 
-      const found = findFieldByResponseKey(
-        info,
-        selection.selectionSet,
-        responseKey,
-        parentTypename
+      matches.push(
+        ...findAllFieldsByResponseKey(info, selection.selectionSet, responseKey, parentTypename)
       )
-      if (found) return found
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = info.fragments[selection.name.value]
       if (!fragment) continue
@@ -379,12 +401,13 @@ function findFieldByResponseKey(
         continue
       }
 
-      const found = findFieldByResponseKey(info, fragment.selectionSet, responseKey, parentTypename)
-      if (found) return found
+      matches.push(
+        ...findAllFieldsByResponseKey(info, fragment.selectionSet, responseKey, parentTypename)
+      )
     }
   }
 
-  return undefined
+  return matches
 }
 
 function typeConditionMatches(

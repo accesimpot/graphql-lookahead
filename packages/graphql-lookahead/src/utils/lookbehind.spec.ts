@@ -849,6 +849,134 @@ describe('lookbehind with aliases', () => {
     ])
   })
 
+  it('resolves nested aliases that only appear on a later merged selection via fragment', async () => {
+    const visited: Array<{ field: string; responseKey: string }> = []
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        lookbehindAndThrow({
+          info,
+          until({ field, responseKey }) {
+            visited.push({ field, responseKey })
+            return false
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          order {
+            item {
+              quantity
+            }
+            ...Extra
+          }
+        }
+
+        fragment Extra on Order {
+          item {
+            renamedProduct: product {
+              sku
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'product', responseKey: 'renamedProduct' },
+      { field: 'item', responseKey: 'item' },
+      { field: 'order', responseKey: 'order' },
+    ])
+  })
+
+  it('resolves nested aliases that only appear on a second inline merged selection', async () => {
+    const visited: Array<{ field: string; responseKey: string }> = []
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        lookbehindAndThrow({
+          info,
+          until({ field, responseKey }) {
+            visited.push({ field, responseKey })
+            return false
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query {
+          order {
+            item {
+              quantity
+            }
+            item {
+              renamedProduct: product {
+                sku
+              }
+            }
+          }
+        }
+      `,
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'product', responseKey: 'renamedProduct' },
+      { field: 'item', responseKey: 'item' },
+      { field: 'order', responseKey: 'order' },
+    ])
+  })
+
+  it('resolves nested aliases when the first merged selection is skipped with @include', async () => {
+    const visited: Array<{ field: string; responseKey: string }> = []
+
+    const schema = createNestedSchema({
+      onLeaf(info) {
+        lookbehindAndThrow({
+          info,
+          until({ field, responseKey }) {
+            visited.push({ field, responseKey })
+            return false
+          },
+        })
+      },
+    })
+
+    const result = await graphql({
+      schema,
+      source: `
+        query ($includeFirst: Boolean!) {
+          order {
+            item @include(if: $includeFirst) {
+              quantity
+            }
+            item {
+              renamedProduct: product {
+                sku
+              }
+            }
+          }
+        }
+      `,
+      variableValues: { includeFirst: false },
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(visited).toEqual([
+      { field: 'product', responseKey: 'renamedProduct' },
+      { field: 'item', responseKey: 'item' },
+      { field: 'order', responseKey: 'order' },
+    ])
+  })
+
   it('exposes listIndex with aliased list ancestors', async () => {
     const detailsByField: Record<
       string,
