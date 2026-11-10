@@ -5,7 +5,7 @@
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 
-Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (query or mutation).
+Use `graphql-lookahead` to check within the resolver function if particular fields are part of the operation (query or mutation). Use `lookbehind` to walk the other direction and inspect **parent** fields on the resolve path.
 
 <br>
 
@@ -24,6 +24,9 @@ Use `graphql-lookahead` to check within the resolver function if particular fiel
 - [Basic usage](#basic-usage)
   - [Types](#types)
   - [Options](#options)
+- [Looking behind (parent fields)](#looking-behind-parent-fields)
+  - [Types (`lookbehind`)](#types-lookbehind)
+  - [Options (`lookbehind`)](#options-lookbehind)
 - [Advanced usage](#advanced-usage)
   - [Example: Sequelize with nested query filters](#example-sequelize-with-nested-query-filters)
   - [Fragment selections (`nextFragment`)](#fragment-selections-nextfragment)
@@ -142,6 +145,93 @@ type NextFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
 | `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
 | `state` | ❔ _Optional_ - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](#advanced-usage). |
 | `until` | ❔ _Optional_ - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well. |
+
+<br>
+
+## Looking behind (parent fields)
+
+`lookbehind` is the inverse of `lookahead`: instead of inspecting child selections in the operation, it walks **ancestor** fields via `info.path`.
+
+It starts at `info.path.prev` (the immediate parent), not the current resolver field — symmetric with `lookahead`, which starts at child fields rather than the resolver field itself.
+
+```ts
+import type { createSchema } from 'graphql-yoga'
+import { lookbehind } from 'graphql-lookahead'
+
+type Resolver = NonNullable<Parameters<typeof createSchema>[0]['resolvers']>
+
+export const resolvers: Resolver = {
+  Product: {
+    sku: async (_parent, _args, _context, info) => {
+      // true when resolving under `order { item { product { sku } } }`
+      if (lookbehind({ info, until: ({ field }) => field === 'order' })) {
+        // ...
+      }
+
+      // Only check the immediate parent
+      lookbehind({
+        info,
+        depth: 1,
+        until: ({ field, sourceType, listIndex }) => {
+          console.log(field, sourceType, listIndex)
+          return false
+        },
+      })
+
+      return 'SKU-1'
+    },
+  },
+}
+```
+
+Fragments do **not** appear as path steps (GraphQL’s resolve path only contains response keys and list indices). Resolvers nested inside inline fragments or fragment spreads still see the correct parent field chain.
+
+Aliases are supported: handlers receive the schema field name as `field`, and the response key as `responseKey` (same value when there is no alias). When the same alias appears under multiple union/interface fragments, `lookbehind` uses the runtime parent type (`path.typename`) to pick the matching branch.
+
+<br>
+
+### Types (`lookbehind`)
+
+```ts
+function lookbehind<TState, RError extends boolean | undefined>(options: {
+  depth?: number | null
+  info: GraphQLResolveInfo
+  next?: (details: PrevHandlerDetails<TState>) => TState
+  onError?: (err: unknown) => RError
+  state?: TState
+  until?: (details: UntilPrevHandlerDetails<TState>) => boolean | {
+    afterAllParents: (details: UntilPrevHandlerDetails<TState>) => void
+  }
+}): boolean
+
+type PrevHandlerDetails<TState> = {
+  info: GraphQLResolveInfo
+  field: string
+  fieldDef: GraphQLField
+  isList: boolean
+  listIndex?: number
+  path: ResolvePath
+  responseKey: string
+  sourceType: string
+  state: TState
+  type: string
+}
+```
+
+`lookHigher` is also exported when you need to start from an arbitrary `info.path` step instead of `info.path.prev`.
+
+<br>
+
+### Options (`lookbehind`)
+
+| Name | Description |
+| ------ | :---------- |
+| `depth` | ❔ _Optional_ - How many parent fields to visit (`depth: 1` is the immediate parent, `depth: null` is no limit). Default: `depth: null`. |
+| `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
+| `next` | ❔ _Optional_ - Handler called for every ancestor field. It can return a state that will be passed to the next (higher) parent’s handlers. |
+| `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
+| `state` | ❔ _Optional_ - Initial state passed to `next` (and nested upward calls). |
+| `until` | ❔ _Optional_ - Handler called for every ancestor field. Returning true will stop the iteration and make `lookbehind` return true as well. |
 
 <br>
 
