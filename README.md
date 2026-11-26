@@ -96,12 +96,14 @@ export const resolvers: Resolver = {
 function lookahead<TState, RError extends boolean | undefined>(options: {
   depth?: number | null
   info: GraphQLResolveInfo
-  next?: (details: NextHandlerDetails<TState>) => TState
+  next?: (details: NextHandlerDetails<TState>) => NextHandlerReturn<TState>
   nextFragment?: (details: NextFragmentHandlerDetails<TState>) => TState
   onError?: (err: unknown) => RError
   state?: TState
   until?: (details: UntilHandlerDetails<TState>) => boolean
 }): boolean
+
+type NextHandlerReturn<TState> = TState | { state: TState; descend?: boolean }
 
 type HandlerDetailsBase<TState> = {
   info: GraphQLResolveInfo
@@ -140,8 +142,8 @@ type NextFragmentHandlerDetails<TState> = HandlerDetailsBase<TState> & {
 | ------ | :---------- |
 | `depth` | ❔ _Optional_ - Specify how deep it should look in the `selectionSet` (i.e. `depth: 1` is the initial `selectionSet`, `depth: null` is no limit). Default: `depth: null`. |
 | `info` | ❗️ _Required_ - GraphQLResolveInfo object which is usually the fourth argument of the resolver function. |
-| `next` | ❔ _Optional_ - Handler called for every field with subfields within the operation. It can return a state that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
-| `nextFragment` | ❔ _Optional_ - Handler called for fragment selections (`next` is only called for field selections). See [Advanced usage](#fragment-selections-nextfragment). |
+| `next` | ❔ _Optional_ - Handler called for every field with subfields within the operation. It can return a state (or `{ state, descend? }`) that will be passed to each `next` call of its direct child fields. See [Advanced usage](#advanced-usage). |
+| `nextFragment` | ❔ _Optional_ - Handler called for fragment selections (`next` is only called for field selections). Always returns `TState` and always descends. See [Advanced usage](#fragment-selections-nextfragment). |
 | `onError` | ❔ _Optional_ - Hook called from a `try..catch` when an error is caught. Default: `(err: unknown) => { console.error(ERROR_PREFIX, err); return true }`. |
 | `state` | ❔ _Optional_ - Initial state passed to `next` and `nextFragment` (and their nested calls). See [Advanced usage](#advanced-usage). |
 | `until` | ❔ _Optional_ - Handler called for every nested field within the operation. Returning true will stop the iteration and make `lookahead` return true as well. |
@@ -239,6 +241,8 @@ type PrevHandlerDetails<TState> = {
 
 You can pass a `state` and use the `next` option that will be called for every nested field within the operation. It is similar to `until`, but `next` can mutate the parent state and return the next state that will be passed to its child fields. You will still need the `until` option if you want to stop the iteration at some point (optional).
 
+`next` may return either a plain `TState` (descend as usual) or `{ state, descend?: boolean }`. Use `descend: false` to skip recursing into that field’s children while continuing the walk for siblings. Omitting `descend` (or setting `descend: true`) still descends. This is distinct from `until: true`, which aborts the entire walk. Only `next` supports `{ state, descend }`; `nextFragment` always returns `TState` and always descends.
+
 If your schema matches your database models, you could build the query filters like this:
 
 <br>
@@ -307,7 +311,7 @@ export const resolvers: Resolver = {
 
 ### Fragment selections (`nextFragment`)
 
-For each fragment step in the operation (`... on Type { }` or `...FragmentName`), `lookahead` calls `nextFragment` instead of `next`. It has the same `state` and return contract as `next` for nested handlers.
+For each fragment step in the operation (`... on Type { }` or `...FragmentName`), `lookahead` calls `nextFragment` instead of `next`. It receives and returns `TState` for nested handlers (unlike `next`, it does not support `{ state, descend }` — fragment steps always descend).
 
 Inline fragments without a type condition (e.g. `... @include(if: true) { }`) do _not_ invoke `nextFragment` (or `next` / `until` for that node). The walker still descends into their selection set using the parent GraphQL type and the current `state`.
 
